@@ -1,4 +1,4 @@
-// game.cpp
+#include "the_kingdom.h"
 #include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -8,149 +8,98 @@
 #include <cstring>
 #include <thread>
 #include <ncurses.h>
-#include "the_kingdom.h"
 
-void serverMode(int port);
-void clientMode(const std::string& server_ip, int port);
-void handleConnection(int socket);
-void printTitle(Coord& myCoord);
-void printOptions(Coord& myCoord);
-void botGame(Coord& myCoord);
-void onlineGame(Coord& myCoord);
-void gameInstructions(Coord& myCoord);
-void printQuit(Coord& myCoord);
-void quit();
-
-int main() {
-    initscr();
-    clear();
-    noecho(); 
-    Coord myCoord;
-    printOptions(myCoord);
-    
-    getch();  
-
-    clear();
-    endwin();
-    return 0;
+// Implementação da classe Coord
+Coord::Coord() {
+    yx = std::make_pair(0, 0);
 }
 
-void printTitle(Coord& myCoord){
-    int rows,cols;
-    getmaxyx(stdscr, rows, cols);
-    if(cols > 135 && rows > 10){
-        printw(" # #####  ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ##   ##            #####     ###    ##   ##  ####### ");
-        myCoord.down();
-        printw("## ## ##  ##  ##   ##   #            ## ##      ##    ###  ##  ##   ##   ## ##   ### ###  ### ###           ##   ##   ## ##   ### ###   ##   #  ");
-        myCoord.down();
-        printw("   ##     ##  ##   ##                ####       ##    #### ##  ##        ##  ##  ##   ##  #######           ##       ##   ##  #######   ##      ");
-        myCoord.down();
-        printw("   ##     ######   ####              ###        ##    #######  ## ####   ##  ##  ##   ##  ## # ##           ## ####  ##   ##  ## # ##   ####    ");
-        myCoord.down();
-        printw("   ##     ##  ##   ##                ####       ##    ## ####  ##   ##   ##  ##  ##   ##  ##   ##           ##   ##  #######  ##   ##   ##      ");
-        myCoord.down();
-        printw("   ##     ##  ##   ##   #            ## ##      ##    ##  ###  ##   ##   ## ##   ### ###  ##   ##           ##   ##  ##   ##  ##   ##   ##   #  ");
-        myCoord.down();
-        printw(" ####    ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ### ###            #####   ##   ##  ### ###  ####### ");
-        myCoord.down();
-        myCoord.down();
-    }else{
-        printw("THE KINGDOM GAME!");
-        myCoord.down();
-        myCoord.down();
-    }
+void Coord::set(int y, int x) {
+    yx = std::make_pair(y, x);
+    move(yx.first, yx.second);
 }
 
-void printOptions(Coord& myCoord){
-    printTitle(myCoord);
-    printw("1-Jogar Contra Bot");
-    myCoord.down();
-    printw("2-Jogar Online na mesma rede");
-    myCoord.down();
-    printw("3-Ver regras do jogo");
-    printQuit(myCoord);
-    refresh();
-    int choice = -1;
-    myCoord.down();
-    myCoord.down();
-    while (true) {
-        choice = getch() - '0';
-        if (choice == 1 || choice == 2) {
-            break;
-        } else if (choice == 3) {
-            gameInstructions(myCoord);
-        } else if (choice == 'q' - '0' || choice == 'Q' - '0') {
-            quit();
-        } else {
-            printw("Pressione 1, 2 ou 3!!!");
-            myCoord.down();
+void Coord::set() {
+    set(yx.first, yx.second);
+}
+
+void Coord::down() {
+    yx.first += 1;
+    move(yx.first, yx.second);
+}
+
+void Coord::top() {
+    yx.first -= 1;
+    move(yx.first, yx.second);
+}
+
+void Coord::left() {
+    yx.second -= 1;
+    move(yx.first, yx.second);
+}
+
+void Coord::right() {
+    yx.second += 1;
+    move(yx.first, yx.second);
+}
+
+std::pair<int, int> Coord::show() {
+    return yx;
+}
+
+// Implementação da classe Deck
+Deck::Deck() {
+    qnt = NUM_CARDS;
+    for (short i = 0; i < NUM_NIPES; i++) {
+        for (short j = 0; j < NUM_TYPES; j++) {
+            cards.push_back(std::make_pair(i, j));
         }
+        cards.push_back(std::make_pair(4, 13));
+        cards.push_back(std::make_pair(4, 13));
     }
+}
 
-    switch (choice) {
-    case 1:
-        botGame(myCoord);
-        break;
-    case 2:
-        onlineGame(myCoord);
-        break;
-    default:
-        quit();
-        break;
+void Deck::shuffDeck() {
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(cards.begin(), cards.end(), g);
+}
+
+std::pair<int, int> Deck::drawCard() {
+    if (cards.empty()) {
+        throw std::out_of_range("No more cards in the deck");
     }
-    return;
+    std::pair<int, int> top = cards.front();
+    cards.pop_back();
+    qnt--;
+    return top;
 }
 
-void botGame(Coord& myCoord){
-    return ;
+// Implementação da classe Hand
+void Hand::setHand(Deck& deck) {
+    qnt = 0;
+    for (int i = 0; i < NUM_START_HAND; i++)
+        drawFromDeck(deck);
 }
-void onlineGame(Coord& myCoord){
 
-}
-
-void gameInstructions(Coord& myCoord){
-    int height = 70;
-    int width = 100;
-    int start_y = 0;
-    int start_x = 5;
-    WINDOW* instructionWin = newwin(height,width,start_y,start_x);
-    box(instructionWin,0,0);
-    // Adicionar instruções na janela
-    mvwprintw(instructionWin, 1, 1, "Game Instructions:");
-    mvwprintw(instructionWin, 2, 1, "1. Use arrow keys to move.");
-    mvwprintw(instructionWin, 3, 1, "2. Press 'e' to quit.");
-    mvwprintw(instructionWin, 4, 1, "3. Have fun!");
-
-    // Atualizar a janela para exibir o conteúdo
-    wrefresh(instructionWin);
-
-    // Esperar por uma entrada do usuário antes de fechar a janela
-    char exit = 'a';
-    while (exit != 'e')
-    {
-        exit = getch();
+void Hand::showCards() const {
+    std::cout << "Your Hand:" << std::endl;
+    for (const auto& card : cards) {
+        std::cout << card_values[card.first] << " of " << card_suits[card.second] << std::endl;
     }
-
-    // Deletar a janela
-    werase(instructionWin);
-    wrefresh(instructionWin);
-    delwin(instructionWin);
-
-    refresh();
-}
-void quit(){
-    clear();
-    endwin();
-    exit(0);
 }
 
-void printQuit(Coord& myCoord){
-    int row,col;
-    getmaxyx(stdscr,row,col);
-    mvprintw(row - 1, 0, "PRESS 'q' to exit.");
-    myCoord.set();
+void Hand::drawFromDeck(Deck& deck) {
+    try {
+        std::pair<int, int> card = deck.drawCard();
+        cards.push_back(card);
+        qnt++;
+    } catch (const std::out_of_range& e) {
+        std::cerr << e.what() << std::endl;
+    }
 }
 
+// Implementação das funções
 void serverMode(int port) {
     int server_fd, new_socket;
     struct sockaddr_in address;
@@ -201,7 +150,6 @@ void serverMode(int port) {
 
     // Fechar o socket
     close(new_socket);
-    close(server_fd);
 }
 
 void clientMode(const std::string& server_ip, int port) {
@@ -256,4 +204,174 @@ void handleConnection(int socket) {
     }
 
     receiveThread.join();
+}
+
+void printTitle(Coord& myCoord) {
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols);
+    if (cols > 135 && rows > 10) {
+        printw(" # #####  ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ##   ##            #####     ###    ##   ##  ####### ");
+        myCoord.down();
+        printw("## ## ##  ##  ##   ##   #            ## ##      ##    ###  ##  ##   ##   ## ##   ### ###  ### ###           ##   ##   ## ##   ### ###   ##   #  ");
+        myCoord.down();
+        printw("   ##     ##  ##   ##                ####       ##    #### ##  ##        ##  ##  ##   ##  #######           ##       ##   ##  #######   ##      ");
+        myCoord.down();
+        printw("   ##     ######   ####              ###        ##    #######  ## ####   ##  ##  ##   ##  ## # ##           ## ####  ##   ##  ## # ##   ####    ");
+        myCoord.down();
+        printw("   ##     ##  ##   ##                ####       ##    ## ####  ##   ##   ##  ##  ##   ##  ##   ##           ##   ##  #######  ##   ##   ##      ");
+        myCoord.down();
+        printw("   ##     ##  ##   ##   #            ## ##      ##    ##  ###  ##   ##   ## ##   ### ###  ##   ##           ##   ##  ##   ##  ##   ##   ##   #  ");
+        myCoord.down();
+        printw(" ####    ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ### ###            #####   ##   ##  ### ###  ####### ");
+        myCoord.down();
+        myCoord.down();
+    }
+}
+
+void printOptions(Coord& myCoord) {
+    printTitle(myCoord);
+    printw("Escolha uma opção: ");
+    myCoord.down();
+    printw("1-Jogar Contra Bot");
+    myCoord.down();
+    printw("2-Jogar Online na mesma rede");
+    myCoord.down();
+    printw("3-Ver regras do jogo");
+    myCoord.down();
+    printw("4-Sair");
+    myCoord.down();
+    refresh();
+    
+    int choice;
+    while (true){
+        choice = getint();
+        if(choice == 3){
+            gameInstructions();
+        }
+        else if(choice < 1 || choice > 4){
+            printw("Press 1,2,3 or 4!!!");
+            myCoord.down();
+        }else 
+            break;
+    }
+    
+    switch (choice) {
+    case 1:
+        botGame(myCoord);
+        break;
+    case 2:
+        onlineGame(myCoord);
+        break;
+    case 4:
+        quit();
+        break;
+    default:
+        break;
+    }
+}
+
+int getint(){
+    return (getch() - '0');
+}
+
+void botGame(Coord& myCoord) {
+    // Implementação do jogo contra bot
+}
+
+void onlineGame(Coord& myCoord) {
+    // Implementação do jogo online
+}
+void gameInstructions() {
+    int height, width;
+    getmaxyx(stdscr, height, width);
+    int start_y = 0;
+    int start_x = 0;
+    WINDOW* instructionWin = newwin(height, width, start_y, start_x);
+    box(instructionWin, 0, 0);
+    wrefresh(instructionWin);
+
+    // Adicionar instruções na janela
+    mvwprintw(instructionWin, 1, 1, "Game Instructions:");
+    mvwprintw(instructionWin, 3, 1, "1- Objective: get the king, queen,");
+    mvwprintw(instructionWin, 5, 1, "   and jack of the same suit");
+    mvwprintw(instructionWin, 7, 1, "2- Each player has a deck and a board");
+    mvwprintw(instructionWin, 9, 1, "3- The game is turn-based, first player");
+    mvwprintw(instructionWin, 11, 1, "   is chosen randomly.");
+    mvwprintw(instructionWin, 13, 1, "4- At the start of each turn, draw a card");
+    mvwprintw(instructionWin, 15, 1, "   from your deck");
+    mvwprintw(instructionWin, 17, 1, "5- Players can place heart cards on the board");
+    mvwprintw(instructionWin, 19, 1, "6- If you have more lives (sum of heart cards)");
+    mvwprintw(instructionWin, 21, 1, "   than your opponent, draw an extra card");
+    mvwprintw(instructionWin, 23, 1, "7- By killing a warrior, draw a card");
+    mvwprintw(instructionWin, 25, 1, "   immediately");
+    mvwprintw(instructionWin, 27, 1, "8- On your turn, use the ability of each card");
+    mvwprintw(instructionWin, 29, 1, "9- Kingdom cards have additional abilities");
+    mvwprintw(instructionWin, 31, 1, "10- Cards can be combined for a higher value");
+    mvwprintw(instructionWin, 33, 1, "11- Have fun!");
+    mvwprintw(instructionWin, 35, 1, "Press 'e' to quit.");
+
+    mvwprintw(instructionWin, 1, 50, "|");
+    for (int i = 2; i < 20; i++) {
+        mvwprintw(instructionWin, i, 50, "|");
+    }
+    mvwprintw(instructionWin, 2, 52, "Abilities by Suit");
+    mvwprintw(instructionWin, 3, 52, "Diamonds:");
+    mvwprintw(instructionWin, 4, 52, "1 - Diamond cards give you gold equal to their number.");
+    mvwprintw(instructionWin, 5, 52, "2 - You can buy cards with gold, each card costs 5 gold.");
+    mvwprintw(instructionWin, 6, 52, "3 - If you have a 3 and a 7 of diamonds, you can use them");
+    mvwprintw(instructionWin, 7, 52, "    together to have 10 gold.");
+    mvwprintw(instructionWin, 8, 52, "4 - Any excess value from a division by 5 will be discarded.");
+    mvwprintw(instructionWin, 9, 52, "5 - Gold can be placed in the gold bank. If you accumulate");
+    mvwprintw(instructionWin, 10, 52, "    20 gold, buy an additional card at the start of each turn.");
+    mvwprintw(instructionWin, 11, 52, "Hearts:");
+    mvwprintw(instructionWin, 12, 52, "1 - Heart cards represent warriors.");
+    mvwprintw(instructionWin, 13, 52, "2 - These warriors can be placed on the board.");
+    mvwprintw(instructionWin, 14, 52, "3 - The life of these warriors is defined by the number on the card.");
+    mvwprintw(instructionWin, 15, 52, "Clubs:");
+    mvwprintw(instructionWin, 16, 52, "1 - Club cards serve as shields for the warriors.");
+    mvwprintw(instructionWin, 17, 52, "2 - Each warrior can only have one shield.");
+    mvwprintw(instructionWin, 18, 52, "3 - A warrior can only be attacked after their shield is broken.");
+    mvwprintw(instructionWin, 19, 52, "4 - Excess damage to the shield does not reduce the warrior's life.");
+    mvwprintw(instructionWin, 20, 52, "5 - If you want, you can break a warrior's shield.");
+    mvwprintw(instructionWin, 21, 52, "Spades:");
+    mvwprintw(instructionWin, 22, 52, "1 - Spade cards are used to attack warriors and their shields.");
+    mvwprintw(instructionWin, 23, 52, "2 - They deal damage equal to their number.");
+    mvwprintw(instructionWin, 24, 52, "3 - If the sum of the spade cards' numbers is greater than the shield");
+    mvwprintw(instructionWin, 25, 52, "    or the warrior's life, the shield is broken or the warrior is killed.");
+    mvwprintw(instructionWin, 26, 52, "Special Cards:");
+    mvwprintw(instructionWin, 27, 52, "** Special cards have an additional power besides their suit's ability.");
+    mvwprintw(instructionWin, 28, 52, "Queen: buy three cards");
+    mvwprintw(instructionWin, 29, 52, "King: kill a warrior");
+    mvwprintw(instructionWin, 30, 52, "Jack: swap one of your chosen warriors with one of the opponent's");
+    mvwprintw(instructionWin, 31, 52, "Joker: Steal a card from the opponent, chosen blindly");
+
+    wrefresh(instructionWin);
+
+    // Esperar por uma entrada do usuário antes de fechar a janela
+    char exit = 'a';
+    while (exit != 'e' && exit != 'E') {
+        exit = getch();
+    }
+
+    // Deletar a janela
+    werase(instructionWin);
+    wrefresh(instructionWin);
+    delwin(instructionWin);
+
+    touchwin(stdscr);
+    refresh();
+}
+
+void printQuit(Coord& myCoord) {
+    int row, col;
+    getmaxyx(stdscr, row, col); // Obtém o número de linhas e colunas da janela
+    mvprintw(row - 1, 0, "Pressione 'q' para sair.");
+    myCoord.set();
+    refresh();
+}
+
+void quit() {
+    clear();
+    endwin();
+    exit(0);
 }
