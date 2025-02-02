@@ -79,6 +79,7 @@ public:
     void draw(Coord &coord);         // Draw the diamond bank on the screen
     int attacked(std::vector<Card>); // Handle attack on the diamond bank
     void addCard(std::vector<Card>); // Add cards to the diamond bank
+    bool full();
 };
 
 // Hand class representing a player's hand of cards
