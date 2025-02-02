@@ -23,6 +23,12 @@ const std::string card_values[] = {
 const std::string card_suits[] = {
     "HEARTS", "DIAMONDS", "CLUBS", "SPADES", "JOKER_SUIT"};
 
+class Card
+{
+    int nipe;
+    int number;
+}
+
 class Coord
 {
 public:
@@ -49,6 +55,7 @@ public:
     Deck();
     void shuffDeck();
     std::pair<int, int> drawnCard();
+    void draw();
 };
 
 class Hand

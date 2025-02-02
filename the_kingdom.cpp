@@ -71,6 +71,24 @@ void printEnemyHalfCardBack(Coord &coord, int num)
     coord.down();
 }
 
+void printHalfCard(Coord &coord, std::pair<int, int> card, int num)
+{
+    printw("######## ");
+    coord.down();
+    printw("#%2i      ", num); // 9 characteres
+    coord.down();
+    printw("#%2i      ", card.second);
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+}
+
 int getint()
 {
     return (getch() - '0');
@@ -623,9 +641,9 @@ int printOptions(Coord &myCoord)
     return choice;
 }
 
-void player_moves(bool player_time, Board &board, Player &p1, Player &p2)
+bool player_moves(bool player_time, Board &board, Player &p1, Player &p2)
 {
-    if (player_time)
+    if (player_time) // vez do p1
     {
     }
 }
@@ -652,8 +670,8 @@ void loopBotGame(Board &board, Player &p1, Player &p2)
     }
     while (!end_game)
     {
-        player_moves(player_time, board, p1, p2);
-        end_game = !end_game;
+        end_game = player_moves(player_time, board, p1, p2);
+        player_time = !player_time;
     }
 }
 
@@ -664,6 +682,8 @@ void botGame()
     Board board;
     Player p1;
     Player p2;
+    p1.deck.shuffDeck();
+    p2.deck.shuffDeck();
     p2.drawnFromDeck(3);
     p1.drawnFromDeck(3);
     refresh();
