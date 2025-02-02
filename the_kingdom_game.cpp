@@ -10,14 +10,32 @@
 #include <ncurses.h>
 #include "the_kingdom.h"
 
-int main() {
+int main()
+{
     initscr();
     clear();
-    noecho(); 
+    noecho();
     Coord myCoord;
-    printOptions(myCoord);
-    
-    getch();  
+
+    switch (printOptions(myCoord))
+    {
+    case 1:
+        botGame();
+        break;
+    case 2:
+        onlineGame(myCoord);
+        break;
+    case 3:
+        gameInstructions();
+        break;
+    case 4:
+        quit();
+        break;
+    default:
+        break;
+    }
+
+    getch();
 
     clear();
     endwin();

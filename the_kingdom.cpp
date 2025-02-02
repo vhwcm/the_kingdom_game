@@ -8,50 +8,370 @@
 #include <cstring>
 #include <thread>
 #include <ncurses.h>
+#include <unistd.h>
+#include <random>
 
+void showMessage(const char *message)
+{
+    int height = 10;
+    int width = strlen(message) + 4;    // Largura suficiente para a mensagem e borda
+    int start_y = (LINES - height) / 2; // Centralizar verticalmente
+    int start_x = (COLS - width) / 2;   // Centralizar horizontalmente
+
+    WINDOW *messageWin = newwin(height, width, start_y, start_x);
+    box(messageWin, 0, 0);
+    mvwprintw(messageWin, 1, 2, "%s", message);
+    wrefresh(messageWin);
+
+    sleep(2); // Esperar por 2 segundos
+
+    werase(messageWin);
+    wrefresh(messageWin);
+    delwin(messageWin);
+
+    touchwin(stdscr);
+    refresh();
+}
+
+void printEnemyFullCardBack(Coord &coord, int num)
+{
+    // 15 characteres de largura
+    // 7 de altura
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("# %i           #", num);
+    coord.down();
+    printw("###############");
+    coord.down();
+}
+
+void printEnemyHalfCardBack(Coord &coord, int num)
+{
+    printw("#        "); // 9 characteres
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("#        ");
+    coord.down();
+    printw("# %i      ", num);
+    coord.down();
+    printw("######## ");
+    coord.down();
+}
+
+int getint()
+{
+    return (getch() - '0');
+}
 // Implementação da classe Coord
-Coord::Coord() {
+Coord::Coord()
+{
     yx = std::make_pair(0, 0);
 }
 
-void Coord::set(int y, int x) {
+void Coord::set(int y, int x)
+{
     yx = std::make_pair(y, x);
     move(yx.first, yx.second);
 }
 
-void Coord::set() {
+void Coord::set()
+{
     set(yx.first, yx.second);
 }
 
-void Coord::down() {
-    yx.first += 1;
+void Coord::down(int y)
+{
+    yx.first += y;
     move(yx.first, yx.second);
 }
 
-void Coord::top() {
-    yx.first -= 1;
+void Coord::top(int y)
+{
+    yx.first -= y;
     move(yx.first, yx.second);
 }
 
-void Coord::left() {
-    yx.second -= 1;
+void Coord::left(int x)
+{
+    yx.second -= x;
     move(yx.first, yx.second);
 }
 
-void Coord::right() {
-    yx.second += 1;
+void Coord::right(int x)
+{
+    yx.second += x;
     move(yx.first, yx.second);
 }
 
-std::pair<int, int> Coord::show() {
+std::pair<int, int> Coord::show()
+{
     return yx;
 }
 
+Board::Board()
+{
+    p1Life = 0;
+    p1Life = 0;
+}
+
+int Board::addWarrior(int life, int player)
+{
+    if (player == 1)
+    {
+        p1Warriors.push_back(std::make_pair(life, 0));
+        p1Life += life;
+        return 0;
+    }
+    if (player == 2)
+    {
+        p2Warriors.push_back(std::make_pair(life, 0));
+        p1Life += life;
+        return 0;
+    }
+    return -1; // player invalido
+}
+
+int Board::addShield(int pos, int shield, int player)
+{
+    if (player == 1)
+    {
+        if (pos < 0 || pos > (int)p1Warriors.size() - 1)
+            return 1; // Carta inexistente!
+        if (p1Warriors[pos].second != 0)
+            return 2; // Carta ja tem um escudo
+
+        p1Warriors[pos].second = shield;
+        return 0;
+    }
+    else if (player == 2)
+    {
+        if (pos < 0 || pos > (int)p2Warriors.size() - 1)
+            return 1; // Carta inexistente!
+        if (p2Warriors[pos].second != 0)
+            return 2; // Carta ja tem um escudo
+
+        p2Warriors[pos].second = shield;
+        return 0;
+    }
+    else
+    {
+        return -1; // player invalido
+    }
+}
+
+int Board::breakShield(int pos, int player)
+{
+    if (player == 1)
+    {
+        if (pos < 0 || pos > (int)p1Warriors.size() - 1)
+            return 1; // Carta inexistente!
+        if (p1Warriors[pos].second == 0)
+            return 2; // Carta ja tem um escudo
+
+        p1Warriors[pos].second = 0;
+        return 0;
+    }
+    else if (player == 2)
+    {
+        if (pos < 0 || pos > (int)p2Warriors.size() - 1)
+            return 1; // Carta inexistente!
+        if (p2Warriors[pos].second == 0)
+            return 2; // Carta ja tem um escudo
+
+        p2Warriors[pos].second = 0;
+        return 0;
+    }
+    else
+    {
+        return -1; // player invalido
+    }
+}
+
+// int Board::numDrawns(int player)
+// {
+//     if (player == 1)
+//     {
+//         if (p1Life > p2Life)
+//             return true;
+//         else
+//             return false;
+//     }
+//     else
+//     {
+//         if (p1Life > p2Life)
+//             return true;
+//         else
+//             return false;
+//     }
+// }
+
+int Board::atackWarrior(int pos, int atack, int player)
+{
+    if (player == 1)
+    {
+        if (pos < 0 || pos > (int)p2Warriors.size() - 1)
+            return -1; // Carta inexistente
+        if (p2Warriors[pos].second != 0)
+        {
+            if (atack < p2Warriors[pos].second)
+                return -2;
+            else
+            {
+                p2Warriors[pos].second = 0;
+                return 1;
+            }
+        }
+        else
+        {
+            if (atack < p2Warriors[pos].first)
+                return -3;
+            else
+            {
+                p1Life -= p2Warriors[pos].first;
+                p2Warriors.erase(p2Warriors.begin() + pos);
+                return 2;
+            }
+        }
+    }
+    else if (player == 2)
+    {
+        if (pos < 0 || pos > (int)p1Warriors.size() - 1)
+            return -1; // Carta inexistente
+        if (p1Warriors[pos].second != 0)
+        {
+            if (atack < p1Warriors[pos].second)
+                return -2;
+            else
+            {
+                p1Warriors[pos].second = 0;
+                return 1;
+            }
+        }
+        else
+        {
+            if (atack < p1Warriors[pos].first)
+                return -3;
+            else
+            {
+                p1Life -= p1Warriors[pos].first;
+                p1Warriors.erase(p1Warriors.begin() + pos);
+                return 2;
+            }
+        }
+    }
+    else
+    {
+        return -4; // player invalido
+    }
+}
+
+int Board::executeWarrior(int pos, int player)
+{
+    if (player == 1)
+    {
+        if (pos < 0 || pos > (int)p2Warriors.size() - 1)
+            return 1;
+        p1Life -= p2Warriors[pos].first;
+        p2Warriors.erase(p2Warriors.begin() + pos);
+        return 0;
+    }
+    else if (player == 2)
+    {
+        if (pos < 0 || pos > (int)p1Warriors.size() - 1)
+            return 1;
+        p1Life -= p1Warriors[pos].first;
+        p1Warriors.erase(p1Warriors.begin() + pos);
+        return 0;
+    }
+    else
+        return -1;
+}
+
+int Board::tradeWarrior(int pos_ally, int pos_enemy, int player)
+{
+    if (player == 1)
+    {
+        if (pos_ally < 0 || pos_ally > (int)p1Warriors.size() - 1 || pos_enemy < 0 || pos_enemy > (int)p2Warriors.size() - 1)
+        {
+            return 1;
+        }
+
+        p1Life -= p1Warriors[pos_ally].first;
+        p1Life -= p2Warriors[pos_enemy].first;
+
+        p1Life += p2Warriors[pos_enemy].first;
+        p1Life += p1Warriors[pos_ally].first;
+
+        std::pair<int, int> aux = p1Warriors[pos_ally];
+        p1Warriors.erase(p1Warriors.begin() + pos_ally);
+        p2Warriors.push_back(aux);
+
+        aux = p2Warriors[pos_enemy];
+        p2Warriors.erase(p2Warriors.begin() + pos_enemy);
+        p1Warriors.push_back(aux);
+        return 0;
+    }
+
+    if (player == 2)
+    {
+        if (pos_ally < 0 || pos_ally > (int)p2Warriors.size() - 1 || pos_enemy < 0 || pos_enemy > (int)p1Warriors.size() - 1)
+        {
+            return 1;
+        }
+
+        p1Life -= p2Warriors[pos_ally].first;
+        p1Life -= p1Warriors[pos_enemy].first;
+
+        p1Life += p1Warriors[pos_enemy].first;
+        p1Life += p2Warriors[pos_ally].first;
+
+        std::pair<int, int> aux = p2Warriors[pos_ally];
+        p2Warriors.erase(p2Warriors.begin() + pos_ally);
+        p1Warriors.push_back(aux);
+
+        aux = p1Warriors[pos_enemy];
+        p1Warriors.erase(p1Warriors.begin() + pos_enemy);
+        p2Warriors.push_back(aux);
+        return 0;
+    }
+
+    return -1; // player invalido
+}
+
+void Board::draw(Player &p1, Player &p2, Coord &coord)
+{
+    int i;
+    for (i = 0; i < p2.hand.num() - 1; i++)
+    {
+        printEnemyHalfCardBack(coord, i);
+        coord.top(CARD_HEIGHT);
+        coord.right(HALF_CARD_WIDTH);
+    }
+    if (p2.hand.num())
+        printEnemyFullCardBack(coord, i);
+}
+
 // Implementação da classe Deck
-Deck::Deck() {
+Deck::Deck()
+{
     qnt = NUM_CARDS;
-    for (short i = 0; i < NUM_NIPES; i++) {
-        for (short j = 0; j < NUM_TYPES; j++) {
+    for (short i = 0; i < NUM_NIPES; i++)
+    {
+        for (short j = 0; j < NUM_TYPES; j++)
+        {
             cards.push_back(std::make_pair(i, j));
         }
         cards.push_back(std::make_pair(4, 13));
@@ -59,61 +379,90 @@ Deck::Deck() {
     }
 }
 
-void Deck::shuffDeck() {
+void Deck::shuffDeck()
+{
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(cards.begin(), cards.end(), g);
 }
 
-std::pair<int, int> Deck::drawCard() {
-    if (cards.empty()) {
-        throw std::out_of_range("No more cards in the deck");
+std::pair<int, int> Deck::drawnCard()
+{
+    if (cards.empty())
+    {
+        throw std::out_of_range("There aren't more cards in the deck");
     }
-    std::pair<int, int> top = cards.front();
-    cards.pop_back();
-    qnt--;
-    return top;
+    else
+    {
+        std::pair<int, int> card = cards.front();
+        cards.pop_back();
+        qnt--;
+        return card;
+    }
 }
 
-// Implementação da classe Hand
-void Hand::setHand(Deck& deck) {
+Hand::Hand()
+{
     qnt = 0;
-    for (int i = 0; i < NUM_START_HAND; i++)
-        drawFromDeck(deck);
 }
 
-void Hand::showCards() const {
+int Hand::num()
+{
+    return qnt;
+}
+
+void Hand::showCards() const
+{
     std::cout << "Your Hand:" << std::endl;
-    for (const auto& card : cards) {
+    for (const auto &card : cards)
+    {
         std::cout << card_values[card.first] << " of " << card_suits[card.second] << std::endl;
     }
 }
 
-void Hand::drawFromDeck(Deck& deck) {
-    try {
-        std::pair<int, int> card = deck.drawCard();
-        cards.push_back(card);
-        qnt++;
-    } catch (const std::out_of_range& e) {
-        std::cerr << e.what() << std::endl;
+void Hand::addCard(std::pair<int, int> card)
+{
+    cards.push_back(card);
+    qnt++;
+}
+
+int Player::drawnFromDeck(int num)
+{
+    while (num--)
+    {
+        try
+        {
+            std::pair<int, int> card = deck.drawnCard();
+            hand.addCard(card);
+            // Add the drawn card to the player's hand or perform other actions
+        }
+        catch (const std::out_of_range &e)
+        {
+            std::cerr << e.what() << std::endl;
+            return -1;
+        }
     }
+    return 1;
 }
 
 // Implementação das funções
-void serverMode(int port) {
+void serverMode(int port)
+{
     int server_fd, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
 
     // Criar socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    {
         std::cerr << "Erro ao criar o socket" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     // Configurar o socket
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+    {
         std::cerr << "Erro ao configurar o socket" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
@@ -123,14 +472,16 @@ void serverMode(int port) {
     address.sin_port = htons(port);
 
     // Associar o socket ao endereço e porta
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
+    {
         std::cerr << "Erro ao fazer bind" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
     }
 
     // Colocar o socket em modo de escuta
-    if (listen(server_fd, 3) < 0) {
+    if (listen(server_fd, 3) < 0)
+    {
         std::cerr << "Erro ao colocar em modo de escuta" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
@@ -139,7 +490,8 @@ void serverMode(int port) {
     std::cout << "Esperando por conexões..." << std::endl;
 
     // Aceitar conexões de clientes
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0)
+    {
         std::cerr << "Erro ao aceitar conexão" << std::endl;
         close(server_fd);
         exit(EXIT_FAILURE);
@@ -152,12 +504,14 @@ void serverMode(int port) {
     close(new_socket);
 }
 
-void clientMode(const std::string& server_ip, int port) {
+void clientMode(const std::string &server_ip, int port)
+{
     int sock = 0;
     struct sockaddr_in serv_addr;
 
     // Criar socket
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         std::cerr << "Erro ao criar o socket" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -166,13 +520,15 @@ void clientMode(const std::string& server_ip, int port) {
     serv_addr.sin_port = htons(port);
 
     // Converter endereço IP de texto para binário
-    if (inet_pton(AF_INET, server_ip.c_str(), &serv_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, server_ip.c_str(), &serv_addr.sin_addr) <= 0)
+    {
         std::cerr << "Endereço inválido" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     // Conectar ao servidor
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
         std::cerr << "Erro ao conectar" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -184,21 +540,23 @@ void clientMode(const std::string& server_ip, int port) {
     close(sock);
 }
 
-void handleConnection(int socket) {
+void handleConnection(int socket)
+{
     char buffer[1024] = {0};
     std::string message;
 
-    std::thread receiveThread([&]() {
+    std::thread receiveThread([&]()
+                              {
         while (true) {
             int valread = read(socket, buffer, 1024);
             if (valread > 0) {
                 std::cout << "Mensagem recebida: " << buffer << std::endl;
                 memset(buffer, 0, sizeof(buffer));
             }
-        }
-    });
+        } });
 
-    while (true) {
+    while (true)
+    {
         std::getline(std::cin, message);
         send(socket, message.c_str(), message.length(), 0);
     }
@@ -206,10 +564,12 @@ void handleConnection(int socket) {
     receiveThread.join();
 }
 
-void printTitle(Coord& myCoord) {
+void printTitle(Coord &myCoord)
+{
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
-    if (cols > 135 && rows > 10) {
+    if (cols > 135 && rows > 10)
+    {
         printw(" # #####  ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ##   ##            #####     ###    ##   ##  ####### ");
         myCoord.down();
         printw("## ## ##  ##  ##   ##   #            ## ##      ##    ###  ##  ##   ##   ## ##   ### ###  ### ###           ##   ##   ## ##   ### ###   ##   #  ");
@@ -228,7 +588,8 @@ void printTitle(Coord& myCoord) {
     }
 }
 
-void printOptions(Coord& myCoord) {
+int printOptions(Coord &myCoord)
+{
     printTitle(myCoord);
     printw("Escolha uma opção: ");
     myCoord.down();
@@ -241,52 +602,85 @@ void printOptions(Coord& myCoord) {
     printw("4-Sair");
     myCoord.down();
     refresh();
-    
+
     int choice;
-    while (true){
+    while (true)
+    {
         choice = getint();
-        if(choice == 3){
+        if (choice == 3)
+        {
             gameInstructions();
         }
-        else if(choice < 1 || choice > 4){
+        else if (choice < 1 || choice > 4)
+        {
             printw("Press 1,2,3 or 4!!!");
             myCoord.down();
-        }else 
+        }
+        else
             break;
     }
-    
-    switch (choice) {
-    case 1:
-        botGame(myCoord);
-        break;
-    case 2:
-        onlineGame(myCoord);
-        break;
-    case 4:
-        quit();
-        break;
-    default:
-        break;
+
+    return choice;
+}
+
+void player_moves(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    if (player_time)
+    {
     }
 }
 
-int getint(){
-    return (getch() - '0');
+void loopBotGame(Board &board, Player &p1, Player &p2)
+{
+    std::random_device rd;  // Gerador de números aleatórios não determinístico
+    std::mt19937 gen(rd()); //  // Mersenne Twister, um gerador de números pseudo-aleatórios
+    std::uniform_int_distribution<> distrib(1, 2);
+    Coord myCoord;
+    myCoord.set(1, 1);
+    board.draw(p1, p2, myCoord);
+    bool player_time;
+    bool end_game = 0;
+    if (distrib(gen) == 1)
+    {
+        showMessage("Player 1 starts!!!");
+        player_time = 0;
+    }
+    else
+    {
+        showMessage("Player 2 Starts!!!");
+        player_time = 1;
+    }
+    while (!end_game)
+    {
+        player_moves(player_time, board, p1, p2);
+        end_game = !end_game;
+    }
 }
 
-void botGame(Coord& myCoord) {
+void botGame()
+{
     // Implementação do jogo contra bot
+    werase(stdscr); // limpa a tela
+    Board board;
+    Player p1;
+    Player p2;
+    p2.drawnFromDeck(3);
+    p1.drawnFromDeck(3);
+    refresh();
+    loopBotGame(board, p1, p2);
 }
 
-void onlineGame(Coord& myCoord) {
+void onlineGame(Coord &myCoord)
+{
     // Implementação do jogo online
 }
-void gameInstructions() {
+void gameInstructions()
+{
     int height, width;
     getmaxyx(stdscr, height, width);
     int start_y = 0;
     int start_x = 0;
-    WINDOW* instructionWin = newwin(height, width, start_y, start_x);
+    WINDOW *instructionWin = newwin(height, width, start_y, start_x);
     box(instructionWin, 0, 0);
     wrefresh(instructionWin);
 
@@ -311,7 +705,8 @@ void gameInstructions() {
     mvwprintw(instructionWin, 35, 1, "Press 'e' to quit.");
 
     mvwprintw(instructionWin, 1, 50, "|");
-    for (int i = 2; i < 20; i++) {
+    for (int i = 2; i < 20; i++)
+    {
         mvwprintw(instructionWin, i, 50, "|");
     }
     mvwprintw(instructionWin, 2, 52, "Abilities by Suit");
@@ -349,7 +744,8 @@ void gameInstructions() {
 
     // Esperar por uma entrada do usuário antes de fechar a janela
     char exit = 'a';
-    while (exit != 'e' && exit != 'E') {
+    while (exit != 'e' && exit != 'E')
+    {
         exit = getch();
     }
 
@@ -362,7 +758,8 @@ void gameInstructions() {
     refresh();
 }
 
-void printQuit(Coord& myCoord) {
+void printQuit(Coord &myCoord)
+{
     int row, col;
     getmaxyx(stdscr, row, col); // Obtém o número de linhas e colunas da janela
     mvprintw(row - 1, 0, "Pressione 'q' para sair.");
@@ -370,7 +767,8 @@ void printQuit(Coord& myCoord) {
     refresh();
 }
 
-void quit() {
+void quit()
+{
     clear();
     endwin();
     exit(0);
