@@ -47,7 +47,7 @@ void printEnemyFullCardBack(Coord &coord, int num)
     coord.down();
     printw("#             #");
     coord.down();
-    printw("# %i           #", num);
+    printw("#-%2i          #", num);
     coord.down();
     printw("###############");
     coord.down();
@@ -65,27 +65,47 @@ void printEnemyHalfCardBack(Coord &coord, int num)
     coord.down();
     printw("#        ");
     coord.down();
-    printw("# %i      ", num);
+    printw("#-%2i     ", num);
     coord.down();
     printw("######## ");
     coord.down();
 }
 
-void printHalfCard(Coord &coord, std::pair<int, int> card, int num)
+void printHalfCard(Coord &coord, Card card, int num)
 {
     printw("######## ");
     coord.down();
-    printw("#%2i      ", num); // 9 characteres
+    printw("#-%2i     ", num); // 9 characteres
     coord.down();
-    printw("#%2i      ", card.second);
-    coord.down();
-    printw("#        ");
+    printw("#%2i     ", card.number);
     coord.down();
     printw("#        ");
     coord.down();
     printw("#        ");
     coord.down();
     printw("#        ");
+    coord.down();
+    printw("#%-8s", card_suits[card.nipe].c_str());
+    coord.down();
+}
+
+void printFullCard(Coord &coord, Card card, int num)
+{
+    // 15 characteres de largura
+    // 7 de altura
+    printw("###############");
+    coord.down();
+    printw("#-%2i          #", num);
+    coord.down();
+    printw("# %2i          #", card.number);
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#             #");
+    coord.down();
+    printw("#%-8s     #", card_suits[card.nipe].c_str());
     coord.down();
 }
 
@@ -149,13 +169,13 @@ int Board::addWarrior(int life, int player)
 {
     if (player == 1)
     {
-        p1Warriors.push_back(std::make_pair(life, 0));
+        p1Warriors.push_back(Card(life, 0));
         p1Life += life;
         return 0;
     }
     if (player == 2)
     {
-        p2Warriors.push_back(std::make_pair(life, 0));
+        p2Warriors.push_back(Card(life, 0));
         p1Life += life;
         return 0;
     }
@@ -168,20 +188,20 @@ int Board::addShield(int pos, int shield, int player)
     {
         if (pos < 0 || pos > (int)p1Warriors.size() - 1)
             return 1; // Carta inexistente!
-        if (p1Warriors[pos].second != 0)
+        if (p1Warriors[pos].number != 0)
             return 2; // Carta ja tem um escudo
 
-        p1Warriors[pos].second = shield;
+        p1Warriors[pos].number = shield;
         return 0;
     }
     else if (player == 2)
     {
         if (pos < 0 || pos > (int)p2Warriors.size() - 1)
             return 1; // Carta inexistente!
-        if (p2Warriors[pos].second != 0)
+        if (p2Warriors[pos].number != 0)
             return 2; // Carta ja tem um escudo
 
-        p2Warriors[pos].second = shield;
+        p2Warriors[pos].number = shield;
         return 0;
     }
     else
@@ -196,20 +216,20 @@ int Board::breakShield(int pos, int player)
     {
         if (pos < 0 || pos > (int)p1Warriors.size() - 1)
             return 1; // Carta inexistente!
-        if (p1Warriors[pos].second == 0)
+        if (p1Warriors[pos].number == 0)
             return 2; // Carta ja tem um escudo
 
-        p1Warriors[pos].second = 0;
+        p1Warriors[pos].number = 0;
         return 0;
     }
     else if (player == 2)
     {
         if (pos < 0 || pos > (int)p2Warriors.size() - 1)
             return 1; // Carta inexistente!
-        if (p2Warriors[pos].second == 0)
+        if (p2Warriors[pos].number == 0)
             return 2; // Carta ja tem um escudo
 
-        p2Warriors[pos].second = 0;
+        p2Warriors[pos].number = 0;
         return 0;
     }
     else
@@ -242,23 +262,23 @@ int Board::atackWarrior(int pos, int atack, int player)
     {
         if (pos < 0 || pos > (int)p2Warriors.size() - 1)
             return -1; // Carta inexistente
-        if (p2Warriors[pos].second != 0)
+        if (p2Warriors[pos].number != 0)
         {
-            if (atack < p2Warriors[pos].second)
+            if (atack < p2Warriors[pos].number)
                 return -2;
             else
             {
-                p2Warriors[pos].second = 0;
+                p2Warriors[pos].number = 0;
                 return 1;
             }
         }
         else
         {
-            if (atack < p2Warriors[pos].first)
+            if (atack < p2Warriors[pos].nipe)
                 return -3;
             else
             {
-                p1Life -= p2Warriors[pos].first;
+                p1Life -= p2Warriors[pos].nipe;
                 p2Warriors.erase(p2Warriors.begin() + pos);
                 return 2;
             }
@@ -268,23 +288,23 @@ int Board::atackWarrior(int pos, int atack, int player)
     {
         if (pos < 0 || pos > (int)p1Warriors.size() - 1)
             return -1; // Carta inexistente
-        if (p1Warriors[pos].second != 0)
+        if (p1Warriors[pos].number != 0)
         {
-            if (atack < p1Warriors[pos].second)
+            if (atack < p1Warriors[pos].number)
                 return -2;
             else
             {
-                p1Warriors[pos].second = 0;
+                p1Warriors[pos].number = 0;
                 return 1;
             }
         }
         else
         {
-            if (atack < p1Warriors[pos].first)
+            if (atack < p1Warriors[pos].nipe)
                 return -3;
             else
             {
-                p1Life -= p1Warriors[pos].first;
+                p1Life -= p1Warriors[pos].nipe;
                 p1Warriors.erase(p1Warriors.begin() + pos);
                 return 2;
             }
@@ -302,7 +322,7 @@ int Board::executeWarrior(int pos, int player)
     {
         if (pos < 0 || pos > (int)p2Warriors.size() - 1)
             return 1;
-        p1Life -= p2Warriors[pos].first;
+        p1Life -= p2Warriors[pos].nipe;
         p2Warriors.erase(p2Warriors.begin() + pos);
         return 0;
     }
@@ -310,7 +330,7 @@ int Board::executeWarrior(int pos, int player)
     {
         if (pos < 0 || pos > (int)p1Warriors.size() - 1)
             return 1;
-        p1Life -= p1Warriors[pos].first;
+        p1Life -= p1Warriors[pos].nipe;
         p1Warriors.erase(p1Warriors.begin() + pos);
         return 0;
     }
@@ -327,13 +347,13 @@ int Board::tradeWarrior(int pos_ally, int pos_enemy, int player)
             return 1;
         }
 
-        p1Life -= p1Warriors[pos_ally].first;
-        p1Life -= p2Warriors[pos_enemy].first;
+        p1Life -= p1Warriors[pos_ally].nipe;
+        p1Life -= p2Warriors[pos_enemy].nipe;
 
-        p1Life += p2Warriors[pos_enemy].first;
-        p1Life += p1Warriors[pos_ally].first;
+        p1Life += p2Warriors[pos_enemy].nipe;
+        p1Life += p1Warriors[pos_ally].nipe;
 
-        std::pair<int, int> aux = p1Warriors[pos_ally];
+        Card aux = p1Warriors[pos_ally];
         p1Warriors.erase(p1Warriors.begin() + pos_ally);
         p2Warriors.push_back(aux);
 
@@ -350,13 +370,13 @@ int Board::tradeWarrior(int pos_ally, int pos_enemy, int player)
             return 1;
         }
 
-        p1Life -= p2Warriors[pos_ally].first;
-        p1Life -= p1Warriors[pos_enemy].first;
+        p1Life -= p2Warriors[pos_ally].nipe;
+        p1Life -= p1Warriors[pos_enemy].nipe;
 
-        p1Life += p1Warriors[pos_enemy].first;
-        p1Life += p2Warriors[pos_ally].first;
+        p1Life += p1Warriors[pos_enemy].nipe;
+        p1Life += p2Warriors[pos_ally].nipe;
 
-        std::pair<int, int> aux = p2Warriors[pos_ally];
+        Card aux = p2Warriors[pos_ally];
         p2Warriors.erase(p2Warriors.begin() + pos_ally);
         p1Warriors.push_back(aux);
 
@@ -371,6 +391,31 @@ int Board::tradeWarrior(int pos_ally, int pos_enemy, int player)
 
 void Board::draw(Player &p1, Player &p2, Coord &coord)
 {
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    printEnemyCards(p2, coord);
+    coord.set(max_y - (CARD_HEIGHT + 2), max_x - (CARD_WIDTH + 2));
+    printPlayerCards(p1, coord);
+    coord.set(max_y - (FULL_CARD_HEIGTH + 2), 2);
+    p1.deck.draw(coord);
+    coord.set(2, max_x - (CARD_WIDTH + 2));
+    p2.deck.draw(coord);
+    refresh();
+}
+
+void Board::printGoldBank(Player &p, Coord &coord)
+{
+    if (p.getId() == 1)
+    {
+    }
+    else
+    {
+    }
+}
+
+void Board::printEnemyCards(Player &p2, Coord &coord)
+{
     int i;
     for (i = 0; i < p2.hand.num() - 1; i++)
     {
@@ -382,29 +427,46 @@ void Board::draw(Player &p1, Player &p2, Coord &coord)
         printEnemyFullCardBack(coord, i);
 }
 
+void Board::printPlayerCards(Player &p1, Coord &coord)
+{
+    int i = 0;
+    if (p1.hand.num())
+        printFullCard(coord, p1.hand.getCard(i), i);
+    for (i = 1; i < p1.hand.num(); i++)
+    {
+        coord.top(CARD_HEIGHT);
+        coord.left(HALF_CARD_WIDTH);
+        printHalfCard(coord, p1.hand.getCard(i), i);
+    }
+}
+
 // Implementação da classe Deck
 Deck::Deck()
 {
     qnt = NUM_CARDS;
-    for (short i = 0; i < NUM_NIPES; i++)
+    for (short nipe = 1; nipe <= NUM_NIPES; nipe++)
     {
-        for (short j = 0; j < NUM_TYPES; j++)
+        for (short number = 1; number <= NUM_TYPES; number++)
         {
-            cards.push_back(std::make_pair(i, j));
+            cards.push_back(Card(nipe, number));
         }
-        cards.push_back(std::make_pair(4, 13));
-        cards.push_back(std::make_pair(4, 13));
     }
+    cards.push_back(Card(4, 13));
+    cards.push_back(Card(4, 13));
 }
 
 void Deck::shuffDeck()
 {
     std::random_device rd;
     std::mt19937 g(rd());
-    std::shuffle(cards.begin(), cards.end(), g);
+    for (size_t i = 0; i < cards.size(); ++i)
+    {
+        std::uniform_int_distribution<> distrib(i, cards.size() - 1);
+        std::swap(cards[i], cards[distrib(g)]);
+    }
 }
 
-std::pair<int, int> Deck::drawnCard()
+Card Deck::drawnCard()
 {
     if (cards.empty())
     {
@@ -412,16 +474,44 @@ std::pair<int, int> Deck::drawnCard()
     }
     else
     {
-        std::pair<int, int> card = cards.front();
+        Card card = cards.back();
         cards.pop_back();
         qnt--;
         return card;
     }
 }
 
+void Deck::draw(Coord &coord)
+{
+    printw("######DECK######");
+    coord.down();
+    for (int i = 0; i < FULL_CARD_HEIGTH; i++)
+    {
+        if (i == FULL_CARD_HEIGTH / 2)
+        {
+            printw("#      %2i      #", qnt);
+        }
+        else if (i == FULL_CARD_HEIGTH / 2 + 1)
+        {
+            printw("#Card(s) Remain#");
+        }
+        else
+        {
+            printw("#              #");
+        }
+        coord.down();
+    }
+    printw("################");
+}
+
 Hand::Hand()
 {
     qnt = 0;
+}
+
+Card Hand::getCard(int num)
+{
+    return cards[num];
 }
 
 int Hand::num()
@@ -434,14 +524,24 @@ void Hand::showCards() const
     std::cout << "Your Hand:" << std::endl;
     for (const auto &card : cards)
     {
-        std::cout << card_values[card.first] << " of " << card_suits[card.second] << std::endl;
+        std::cout << card_values[card.nipe] << " of " << card_suits[card.number] << std::endl;
     }
 }
 
-void Hand::addCard(std::pair<int, int> card)
+void Hand::addCard(Card card)
 {
     cards.push_back(card);
     qnt++;
+}
+
+Player::Player(int num_id)
+{
+    id = num_id;
+}
+
+int Player::getId()
+{
+    return id;
 }
 
 int Player::drawnFromDeck(int num)
@@ -450,7 +550,7 @@ int Player::drawnFromDeck(int num)
     {
         try
         {
-            std::pair<int, int> card = deck.drawnCard();
+            Card card = deck.drawnCard();
             hand.addCard(card);
             // Add the drawn card to the player's hand or perform other actions
         }
@@ -646,6 +746,7 @@ bool player_moves(bool player_time, Board &board, Player &p1, Player &p2)
     if (player_time) // vez do p1
     {
     }
+    return 0;
 }
 
 void loopBotGame(Board &board, Player &p1, Player &p2)
@@ -680,8 +781,8 @@ void botGame()
     // Implementação do jogo contra bot
     werase(stdscr); // limpa a tela
     Board board;
-    Player p1;
-    Player p2;
+    Player p1(1);
+    Player p2(2);
     p1.deck.shuffDeck();
     p2.deck.shuffDeck();
     p2.drawnFromDeck(3);

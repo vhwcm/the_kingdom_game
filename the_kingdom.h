@@ -16,18 +16,22 @@
 #define NUM_START_HAND 3
 #define CARD_HEIGHT 7
 #define HALF_CARD_WIDTH 9
+#define CARD_WIDTH 15
+#define FULL_CARD_HEIGTH 10
 
 const std::string card_values[] = {
     "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING", "JOKER"};
 
 const std::string card_suits[] = {
-    "HEARTS", "DIAMONDS", "CLUBS", "SPADES", "JOKER_SUIT"};
+    "HEARTS", "DIAMONDS", "CLUBS", "SPADES", "JOKER"};
 
 class Card
 {
+public:
     int nipe;
     int number;
-}
+    Card(int n = 0, int num = 0) : nipe(n), number(num) {}
+};
 
 class Coord
 {
@@ -49,34 +53,53 @@ class Deck
 {
 private:
     int qnt;
-    std::vector<std::pair<int, int>> cards;
+    std::vector<Card> cards;
 
 public:
     Deck();
     void shuffDeck();
-    std::pair<int, int> drawnCard();
-    void draw();
+    Card drawnCard();
+    void draw(Coord &coord);
+};
+
+class DiamondBank
+{
+private:
+    std::vector<Card> diamonds_cards;
+    std::vector<Card> shield_cards;
+
+public:
+    DiamondBank(std::vector<Card>);
+    void draw(Coord &coord);
+    int attacked(std::vector<Card>);
+    void addCard(std::vector<Card>);
 };
 
 class Hand
 {
 private:
     int qnt;
-    std::vector<std::pair<int, int>> cards;
+    std::vector<Card> cards;
 
 public:
     Hand();
+    Card getCard(int num);
     int num();
     void showCards() const;
-    void addCard(std::pair<int, int> card);
+    void addCard(Card card);
 };
 
 class Player
 {
+private:
+    int id;
+
 public:
+    Player(int num_id);
     Deck deck;
     Hand hand;
     int drawnFromDeck(int num);
+    int getId();
 };
 
 class Board
@@ -84,8 +107,12 @@ class Board
 private:
     int p1Life;
     int p2Life;
-    std::vector<std::pair<int, int>> p1Warriors;
-    std::vector<std::pair<int, int>> p2Warriors;
+    std::vector<Card> p1Warriors;
+    std::vector<Card> p2Warriors;
+    std::vector<Card> p1Warriors;
+    std::vector<Card> p2Warriors;
+    std::vector<DiamondBank> p1DiamondBanks;
+    std::vector<DiamondBank> p2DiamondBanks;
 
 public:
     Board();
@@ -96,6 +123,9 @@ public:
     int executeWarrior(int pos, int player);
     int tradeWarrior(int pos_ally, int pos_enemy, int player);
     void draw(Player &p1, Player &p2, Coord &coord);
+    void printEnemyCards(Player &p2, Coord &coord);
+    void printPlayerCards(Player &p1, Coord &coord);
+    void printGoldBank(Player &p, Coord &coord);
 };
 
 void showMessage(const char *message);
