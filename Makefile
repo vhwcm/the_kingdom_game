@@ -7,7 +7,7 @@ CURSES=-lncurses
 TINFO=-ltinfo
 CCFLAGS=$(DEBUG) $(OPT) $(WARN)
 LD=g++
-OBJS=the_kingdom.o the_kingdom_game.o coord.o deck.o hand.o player.o board.o
+OBJS=the_kingdom.o the_kingdom_game.o coord.o deck.o hand.o player.o board.o diamondBank.o
 
 all: $(TARGET)
 
@@ -35,5 +35,7 @@ player.o: player.cpp the_kingdom.h
 board.o: board.cpp the_kingdom.h
 	$(CC) $(CCFLAGS) -c board.cpp
 
+diamondBank.o: diamondBank.cpp the_kingdom.h
+	$(CC) $(CCFLAGS) -c diamondBank.cpp
 clean:
 	rm -f $(TARGET) $(OBJS)

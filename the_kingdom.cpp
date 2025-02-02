@@ -35,78 +35,94 @@ void showMessage(const char *message)
 
 void printEnemyFullCardBack(Coord &coord, int num)
 {
-    // 15 characteres de largura
-    // 7 de altura
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#-%2i          #", num);
-    coord.down();
-    printw("###############");
-    coord.down();
+    const char *lines[] = {
+        "#             #",
+        "#             #",
+        "#             #",
+        "#             #",
+        "#             #",
+        "#             #",
+        "#%2i############"};
+
+    for (int i = 0; i < CARD_HEIGHT; i++)
+    {
+        if (i == CARD_HEIGHT - 1)
+            printw(lines[i], num);
+        else
+            printw("%s", lines[i]); // Usando literal "%s"
+        coord.down();
+    }
 }
 
 void printEnemyHalfCardBack(Coord &coord, int num)
 {
-    printw("#        "); // 9 characteres
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#-%2i     ", num);
-    coord.down();
-    printw("######## ");
-    coord.down();
+    const char *lines[] = {
+        "#        ",
+        "#        ",
+        "#        ",
+        "#        ",
+        "#        ",
+        "#        ",
+        "#%2i######"};
+
+    for (int i = 0; i < CARD_HEIGHT; i++)
+    {
+        if (i == CARD_HEIGHT - 1)
+            printw(lines[i], num);
+        else
+            printw("%s", lines[i]); // Usando literal "%s"
+        coord.down();
+    }
 }
 
 void printHalfCard(Coord &coord, Card card, int num)
 {
-    printw("######## ");
-    coord.down();
-    printw("#-%2i     ", num); // 9 characteres
-    coord.down();
-    printw("#%2i     ", card.number);
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#        ");
-    coord.down();
-    printw("#%-8s", card_suits[card.nipe].c_str());
-    coord.down();
+    const char *lines[] = {
+        "#%2i#####",
+        "#        ",
+        "#%2i     ",
+        "#        ",
+        "#        ",
+        "#        ",
+        "#%-8s"};
+
+    for (int i = 0; i < CARD_HEIGHT; i++)
+    {
+        if (i == 0)
+            printw(lines[i], num);
+        else if (i == 2)
+            printw(lines[i], card.number);
+        else if (i == CARD_HEIGHT - 1)
+            printw(lines[i], card_suits[card.nipe].c_str());
+        else
+            printw(lines[i]);
+        coord.down();
+    }
 }
 
 void printFullCard(Coord &coord, Card card, int num)
 {
-    // 15 characteres de largura
-    // 7 de altura
-    printw("###############");
-    coord.down();
-    printw("#-%2i          #", num);
-    coord.down();
-    printw("# %2i          #", card.number);
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#             #");
-    coord.down();
-    printw("#%-8s     #", card_suits[card.nipe].c_str());
-    coord.down();
+    const char *lines[] = {
+        "#%2i############",
+        "#             #",
+        "# %2i          #",
+        "#             #",
+        "#             #",
+        "#             #",
+        "#%-8s     #"};
+
+    for (int i = 0; i < CARD_HEIGHT; i++)
+    {
+        if (i == 0)
+            printw(lines[i], num);
+        else if (i == 2)
+            printw(lines[i], card.number);
+        else if (i == CARD_HEIGHT - 1)
+            printw(lines[i], card_suits[card.nipe].c_str());
+        else
+            printw(lines[i]);
+        coord.down();
+    }
 }
 
 int getint()
@@ -173,12 +189,26 @@ int printOptions(Coord &myCoord)
     return choice;
 }
 
-bool player_moves(bool player_time, Board &board, Player &p1, Player &p2)
+bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
 {
-    if (player_time) // vez do p1
+    Coord coord;
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+    coord.set(max_y, max_x / 2 - 10);
+    if (player_time)
+    {
+        printw("Select your Cards!");
+        printQuit(coord);
+        int move = -1;
+        while (move >= p1.hand.num() || move < 0)
+        {
+            move = getint();
+            showMessage("Select a valid Card of your Hand");
+        }
+    }
+    else
     {
     }
-    return 0;
 }
 
 void loopBotGame(Board &board, Player &p1, Player &p2)
@@ -203,7 +233,7 @@ void loopBotGame(Board &board, Player &p1, Player &p2)
     }
     while (!end_game)
     {
-        end_game = player_moves(player_time, board, p1, p2);
+        end_game = playerTime(player_time, board, p1, p2);
         player_time = !player_time;
     }
 }

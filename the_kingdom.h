@@ -44,7 +44,7 @@ public:
     void set(int y, int x);     // Set coordinates to (y, x)
     void set();                 // Set coordinates to current values
     void down(int y = 1);       // Move down by y units
-    void top(int y = 1);        // Move up by y units
+    void up(int y = 1);         // Move up by y units
     void left(int x = 1);       // Move left by x units
     void right(int x = 1);      // Move right by x units
     std::pair<int, int> show(); // Show current coordinates
@@ -75,10 +75,12 @@ private:
     std::vector<Card> shield_cards;   // Vector of shield cards
 
 public:
-    DiamondBank(std::vector<Card>);  // Constructor to initialize the diamond bank
-    void draw(Coord &coord);         // Draw the diamond bank on the screen
-    int attacked(std::vector<Card>); // Handle attack on the diamond bank
-    void addCard(std::vector<Card>); // Add cards to the diamond bank
+    DiamondBank(std::vector<Card>);           // Constructor to initialize the diamond bank
+    void draw(Coord &coord);                  // Draw the diamond bank on the screen
+    int attacked(std::vector<Card>, int pos); // Handle attack on the diamond bank
+    void addDiamondCard(std::vector<Card>);   // Add cards to the diamond bank
+    void addShieldCard(std::vector<Card>);
+    int numCards();
     bool full();
 };
 
@@ -108,7 +110,7 @@ public:
     Deck deck;                  // Player's deck
     Hand hand;                  // Player's hand
     int drawnFromDeck(int num); // Draw cards from the deck
-    int getId();                // Get the player's ID
+    int getId();
 };
 
 // Board class representing the game board
@@ -133,7 +135,7 @@ public:
     void draw(Player &p1, Player &p2, Coord &coord);           // Draw the board on the screen
     void printEnemyCards(Player &p2, Coord &coord);            // Print enemy's cards
     void printPlayerCards(Player &p1, Coord &coord);           // Print player's cards
-    void printGoldBank(Player &p, Coord &coord);               // Print the gold bank
+    void printDiamondBanks(Player &p, Coord &coord);           // Print the gold bank
 };
 
 // Function declarations for general functions and networking

@@ -22,7 +22,7 @@ void Coord::down(int y)
     move(yx.first, yx.second);
 }
 
-void Coord::top(int y)
+void Coord::up(int y) // Changed from top to up
 {
     yx.first -= y;
     move(yx.first, yx.second);
