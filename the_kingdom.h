@@ -10,6 +10,7 @@
 #include <utility>
 #include <ncurses.h>
 
+// Constants for the game
 #define NUM_CARDS 54
 #define NUM_NIPES 4
 #define NUM_TYPES 13
@@ -19,12 +20,14 @@
 #define CARD_WIDTH 15
 #define FULL_CARD_HEIGTH 10
 
+// Card values and suits
 const std::string card_values[] = {
     "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING", "JOKER"};
 
 const std::string card_suits[] = {
     "HEARTS", "DIAMONDS", "CLUBS", "SPADES", "JOKER"};
 
+// Card class representing a card with a suit and a value
 class Card
 {
 public:
@@ -33,115 +36,125 @@ public:
     Card(int n = 0, int num = 0) : nipe(n), number(num) {}
 };
 
+// Coord class representing coordinates on the screen
 class Coord
 {
 public:
-    Coord();
-    void set(int y, int x);
-    void set();
-    void down(int y = 1);
-    void top(int y = 1);
-    void left(int x = 1);
-    void right(int x = 1);
-    std::pair<int, int> show();
+    Coord();                    // Constructor to initialize coordinates
+    void set(int y, int x);     // Set coordinates to (y, x)
+    void set();                 // Set coordinates to current values
+    void down(int y = 1);       // Move down by y units
+    void top(int y = 1);        // Move up by y units
+    void left(int x = 1);       // Move left by x units
+    void right(int x = 1);      // Move right by x units
+    std::pair<int, int> show(); // Show current coordinates
 
 private:
-    std::pair<int, int> yx;
+    std::pair<int, int> yx; // Pair to store coordinates
 };
 
+// Deck class representing a deck of cards
 class Deck
 {
 private:
-    int qnt;
-    std::vector<Card> cards;
+    int qnt;                 // Quantity of cards
+    std::vector<Card> cards; // Vector of cards
 
 public:
-    Deck();
-    void shuffDeck();
-    Card drawnCard();
-    void draw(Coord &coord);
+    Deck();                  // Constructor to initialize the deck
+    void shuffDeck();        // Shuffle the deck
+    Card drawnCard();        // Draw a card from the deck
+    void draw(Coord &coord); // Draw the deck on the screen
 };
 
+// DiamondBank class representing a bank of diamond cards
 class DiamondBank
 {
 private:
-    std::vector<Card> diamonds_cards;
-    std::vector<Card> shield_cards;
+    std::vector<Card> diamonds_cards; // Vector of diamond cards
+    std::vector<Card> shield_cards;   // Vector of shield cards
 
 public:
-    DiamondBank(std::vector<Card>);
-    void draw(Coord &coord);
-    int attacked(std::vector<Card>);
-    void addCard(std::vector<Card>);
+    DiamondBank(std::vector<Card>);  // Constructor to initialize the diamond bank
+    void draw(Coord &coord);         // Draw the diamond bank on the screen
+    int attacked(std::vector<Card>); // Handle attack on the diamond bank
+    void addCard(std::vector<Card>); // Add cards to the diamond bank
 };
 
+// Hand class representing a player's hand of cards
 class Hand
 {
 private:
-    int qnt;
-    std::vector<Card> cards;
+    int qnt;                 // Quantity of cards
+    std::vector<Card> cards; // Vector of cards
 
 public:
-    Hand();
-    Card getCard(int num);
-    int num();
-    void showCards() const;
-    void addCard(Card card);
+    Hand();                  // Constructor to initialize the hand
+    Card getCard(int num);   // Get a card from the hand
+    int num();               // Get the number of cards in the hand
+    void showCards() const;  // Show the cards in the hand
+    void addCard(Card card); // Add a card to the hand
 };
 
+// Player class representing a player in the game
 class Player
 {
 private:
-    int id;
+    int id; // Player ID
 
 public:
-    Player(int num_id);
-    Deck deck;
-    Hand hand;
-    int drawnFromDeck(int num);
-    int getId();
+    Player(int num_id);         // Constructor to initialize the player
+    Deck deck;                  // Player's deck
+    Hand hand;                  // Player's hand
+    int drawnFromDeck(int num); // Draw cards from the deck
+    int getId();                // Get the player's ID
 };
 
+// Board class representing the game board
 class Board
 {
 private:
-    int p1Life;
-    int p2Life;
-    std::vector<Card> p1Warriors;
-    std::vector<Card> p2Warriors;
-    std::vector<Card> p1Warriors;
-    std::vector<Card> p2Warriors;
-    std::vector<DiamondBank> p1DiamondBanks;
-    std::vector<DiamondBank> p2DiamondBanks;
+    int p1Life;                              // Player 1's life
+    int p2Life;                              // Player 2's life
+    std::vector<Card> p1Warriors;            // Player 1's warriors
+    std::vector<Card> p2Warriors;            // Player 2's warriors
+    std::vector<DiamondBank> p1DiamondBanks; // Player 1's diamond banks
+    std::vector<DiamondBank> p2DiamondBanks; // Player 2's diamond banks
 
 public:
-    Board();
-    int addWarrior(int life, int player);
-    int addShield(int pos, int shield, int player);
-    int breakShield(int pos, int player);
-    int atackWarrior(int pos, int atack, int player);
-    int executeWarrior(int pos, int player);
-    int tradeWarrior(int pos_ally, int pos_enemy, int player);
-    void draw(Player &p1, Player &p2, Coord &coord);
-    void printEnemyCards(Player &p2, Coord &coord);
-    void printPlayerCards(Player &p1, Coord &coord);
-    void printGoldBank(Player &p, Coord &coord);
+    Board();                                                   // Constructor to initialize the board
+    int addWarrior(int life, int player);                      // Add a warrior to the board
+    int addShield(int pos, int shield, int player);            // Add a shield to a warrior
+    int breakShield(int pos, int player);                      // Break a shield of a warrior
+    int atackWarrior(int pos, int atack, int player);          // Attack a warrior
+    int executeWarrior(int pos, int player);                   // Execute a warrior
+    int tradeWarrior(int pos_ally, int pos_enemy, int player); // Trade warriors between players
+    void draw(Player &p1, Player &p2, Coord &coord);           // Draw the board on the screen
+    void printEnemyCards(Player &p2, Coord &coord);            // Print enemy's cards
+    void printPlayerCards(Player &p1, Coord &coord);           // Print player's cards
+    void printGoldBank(Player &p, Coord &coord);               // Print the gold bank
 };
 
-void showMessage(const char *message);
-void printEnemyFullCardBack(Coord &coord, int num);
-void printEnemyHalfCardBack(Coord &coord, int num);
-int getint();
+// Function declarations for general functions and networking
+void showMessage(const char *message);              // Show a message on the screen
+void printEnemyFullCardBack(Coord &coord, int num); // Print the back of an enemy's full card
+void printEnemyHalfCardBack(Coord &coord, int num); // Print the back of an enemy's half card
+int getint();                                       // Get an integer input from the user
 
-void serverMode(int port);
-void clientMode(const std::string &server_ip, int port);
-void handleConnection(int socket);
-void printTitle(Coord &myCoord);
-int printOptions(Coord &myCoord);
-void botGame();
-void onlineGame(Coord &myCoord);
-void gameInstructions();
-void printQuit(Coord &myCoord);
-void quit();
+void serverMode(int port);                               // Start the server mode
+void clientMode(const std::string &server_ip, int port); // Start the client mode
+void handleConnection(int socket);                       // Handle the connection
+void printTitle(Coord &myCoord);                         // Print the game title
+int printOptions(Coord &myCoord);                        // Print the game options
+void botGame();                                          // Start the bot game mode
+void onlineGame(Coord &myCoord);                         // Start the online game mode
+void gameInstructions();                                 // Show the game instructions
+void printQuit(Coord &myCoord);                          // Print the quit message
+void showMessage(const char *message);                   // Show a message on the screen
+void printEnemyFullCardBack(Coord &coord, int num);      // Print the back of an enemy's full card
+void printEnemyHalfCardBack(Coord &coord, int num);      // Print the back of an enemy's half card
+void printHalfCard(Coord &coord, Card card, int num);    // Print the front of a half card
+void printFullCard(Coord &coord, Card card, int num);    // Print the front of a full card
+void quit();                                             // Quit the game
 
 #endif // THE_KINGDOM_H
