@@ -24,6 +24,12 @@
 const std::string card_values[] = {
     "ACE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN", "JACK", "QUEEN", "KING", "JOKER"};
 
+#define HEARTS 0
+#define DIAMONDS 1
+#define CLUBS 2
+#define SPADES 3
+#define JOKER 4
+
 const std::string card_suits[] = {
     "HEARTS", "DIAMONDS", "CLUBS", "SPADES", "JOKER"};
 
@@ -34,6 +40,10 @@ public:
     int nipe;
     int number;
     Card(int n = 0, int num = 0) : nipe(n), number(num) {}
+    bool operator==(const Card &other) const
+    {
+        return (nipe == other.nipe && number == other.number);
+    }
 };
 
 // Coord class representing coordinates on the screen
@@ -159,5 +169,11 @@ void printEnemyHalfCardBack(Coord &coord, int num);      // Print the back of an
 void printHalfCard(Coord &coord, Card card, int num);    // Print the front of a half card
 void printFullCard(Coord &coord, Card card, int num);    // Print the front of a full card
 void quit();                                             // Quit the game
+
+void heartsCard(bool player_time, Board &board, Player &p1, Player &p2);   // Handle hearts cards (warriors)
+void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2); // Handle diamonds cards (gold)
+void clubsCard(bool player_time, Board &board, Player &p1, Player &p2);    // Handle clubs cards (shields)
+void spadesCard(bool player_time, Board &board, Player &p1, Player &p2);   // Handle spades cards (attacks)
+void jokerCard(bool player_time, Board &board, Player &p1, Player &p2);    // Handle joker cards
 
 #endif // THE_KINGDOM_H

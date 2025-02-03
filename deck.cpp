@@ -3,7 +3,7 @@
 Deck::Deck()
 {
     qnt = NUM_CARDS;
-    for (short nipe = 1; nipe <= NUM_NIPES; nipe++)
+    for (short nipe = 0; nipe < NUM_NIPES; nipe++)
     {
         for (short number = 1; number <= NUM_TYPES; number++)
         {

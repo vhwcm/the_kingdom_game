@@ -84,7 +84,7 @@ void printHalfCard(Coord &coord, Card card, int num)
         "#        ",
         "#        ",
         "#        ",
-        "#%-8s"};
+        "#%8s"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
@@ -109,7 +109,7 @@ void printFullCard(Coord &coord, Card card, int num)
         "#             #",
         "#             #",
         "#             #",
-        "#%-8s     #"};
+        "#%8s     #"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
@@ -189,26 +189,168 @@ int printOptions(Coord &myCoord)
     return choice;
 }
 
-bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
+void printMoves(std::vector<std::string> moves)
 {
     Coord coord;
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
-    coord.set(max_y, max_x / 2 - 10);
+    coord.set(max_y - 1, 0);
+    clrtoeol();
+    for (auto move : moves)
+    {
+        printw("%-20s ", move.c_str());
+    }
+    refresh();
+}
+// Function implementations for each card type
+int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card heartsCard)
+{
+    std::vector<std::string> moves = {"|Select other card|", "|'M'-move the warrior(s) to Board|",
+                                      "|'D'-drop the card(s)|",
+                                      "|'P'-pass", "Combo Cards:"};
+
+    std::vector<Card> combo;
+    combo.push_back(heartsCard);
+    for (auto card : combo)
+    {
+        char buffer[15];
+        snprintf(buffer, sizeof(buffer), "%i - %s", card.number, card_suits[card.nipe].c_str());
+        moves.push_back(buffer);
+    }
+
+    while (true)
+    {
+        printMoves(moves);
+        char move = getch();
+        if (move == 'D' || move == 'd')
+        {
+            return 1;
+        }
+        else if (move == 'P' || move == 'p')
+        {
+            return 2;
+        }
+        else if (move == 'M' || move == 'm')
+        {
+            for (auto card : combo)
+            {
+                board.addWarrior(card.number, player_time);
+            }
+        }
+        else
+        {
+            int int_move = move - '0';
+            if (int_move < 0)
+            {
+                showMessage("Invalid Move");
+            }
+            else if (int_move >= p1.hand.num())
+            {
+                showMessage("Invalid Move");
+            }
+            else if (p1.hand.getCard(int_move).nipe != HEARTS)
+            {
+                showMessage("Card is not an Hearts");
+            }
+            else
+            {
+                auto it = std::find(combo.begin(), combo.end(), p1.hand.getCard(int_move));
+                if (it == combo.end())
+                {
+                    combo.push_back(p1.hand.getCard(int_move));
+                    char buffer[50];
+                    snprintf(buffer, sizeof(buffer), "%i - %s", p1.hand.getCard(int_move).number, card_suits[p1.hand.getCard(int_move).nipe].c_str());
+                    moves.push_back(buffer);
+                }
+                else
+                    showMessage("This card already was chosed");
+            }
+        }
+    }
+}
+
+void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    // Handle gold cards (diamonds)
+    // 1. Add to diamond bank
+    // 2. Check if can buy cards
+    showMessage("Playing a Diamond card (Gold)");
+    // Implementation needed
+}
+
+void clubsCard(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    // Handle shield cards (clubs)
+    // 1. Add shield to warrior
+    // 2. Protect warrior from attacks
+    showMessage("Playing a Club card (Shield)");
+    // Implementation needed
+}
+
+void spadesCard(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    // Handle attack cards (spades)
+    // 1. Select target
+    // 2. Calculate damage
+    // 3. Apply effects
+    showMessage("Playing a Spade card (Attack)");
+    // Implementation needed
+}
+
+void jokerCard(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    // Handle joker cards
+    // 1. Steal random card from opponent
+    showMessage("Playing a Joker card");
+    // Implementation needed
+}
+
+bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
+{
+    const std::vector<std::string> moves = {"Select a Card or:", "'P'-Pass",
+                                            "'Q'-quit"
+                                            "'S'-Surrender"};
     if (player_time)
     {
-        printw("Select your Cards!");
-        printQuit(coord);
-        int move = -1;
-        while (move >= p1.hand.num() || move < 0)
+        while (true)
         {
-            move = getint();
-            showMessage("Select a valid Card of your Hand");
+            printMoves(moves);
+            int move = getint();
+            if (!(move >= 0 && move < p1.hand.num()))
+                showMessage("Select a valid Card of your Hand");
+            else
+            {
+                switch (p1.hand.getCard(move).nipe)
+                {
+                case HEARTS: // Hearts
+                    heartsCard(player_time, board, p1, p2, p1.hand.getCard(move));
+                    break;
+                case DIAMONDS: // Diamonds
+                    diamondsCard(player_time, board, p1, p2);
+                    break;
+                case CLUBS: // Clubs
+                    clubsCard(player_time, board, p1, p2);
+                    break;
+                case SPADES: // Spades
+                    spadesCard(player_time, board, p1, p2);
+                    break;
+                case JOKER: // Joker
+                    jokerCard(player_time, board, p1, p2);
+                    break;
+                default:
+                    printw("move: %i", move);
+                    showMessage("Invalid card type!");
+                    break;
+                }
+            }
         }
     }
     else
     {
+        // Bot logic will go here
+        return false;
     }
+    return false;
 }
 
 void loopBotGame(Board &board, Player &p1, Player &p2)

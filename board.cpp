@@ -11,13 +11,13 @@ Board::Board()
 // Returns: 0 on success, -1 if invalid player
 int Board::addWarrior(int life, int player)
 {
-    if (player == 1)
+    if (player == 0)
     {
         p1Warriors.push_back(Card(life, 0));
         p1Life += life;
         return 0;
     }
-    if (player == 2)
+    if (player == 1)
     {
         p2Warriors.push_back(Card(life, 0));
         p1Life += life;
@@ -240,7 +240,7 @@ void Board::draw(Player &p1, Player &p2, Coord &coord)
     // Draw enemy cards at top, player cards at bottom
     coord.set(1, 0);
     printEnemyCards(p2, coord);
-    coord.set(max_y - (CARD_HEIGHT), max_x - (CARD_WIDTH));
+    coord.set(max_y - (CARD_HEIGHT + 1), max_x - (CARD_WIDTH));
     printPlayerCards(p1, coord);
 
     // Draw decks for both players
