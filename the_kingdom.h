@@ -102,11 +102,12 @@ private:
     std::vector<Card> cards; // Vector of cards
 
 public:
-    Hand();                  // Constructor to initialize the hand
-    Card getCard(int num);   // Get a card from the hand
-    int num();               // Get the number of cards in the hand
-    void showCards() const;  // Show the cards in the hand
-    void addCard(Card card); // Add a card to the hand
+    Hand();                 // Constructor to initialize the hand
+    Card getCard(int num);  // Get a card from the hand
+    int num();              // Get the number of cards in the hand
+    void showCards() const; // Show the cards in the hand
+    void addCard(Card);     // Add a card to the hand
+    void removeCard(Card);
 };
 
 // Player class representing a player in the game
@@ -142,10 +143,11 @@ public:
     int atackWarrior(int pos, int atack, int player);          // Attack a warrior
     int executeWarrior(int pos, int player);                   // Execute a warrior
     int tradeWarrior(int pos_ally, int pos_enemy, int player); // Trade warriors between players
-    void draw(Player &p1, Player &p2, Coord &coord);           // Draw the board on the screen
+    void draw(Player &p1, Player &p2);                         // Draw the board on the screen
     void printEnemyCards(Player &p2, Coord &coord);            // Print enemy's cards
     void printPlayerCards(Player &p1, Coord &coord);           // Print player's cards
     void printDiamondBanks(Player &p, Coord &coord);           // Print the gold bank
+    void printWarriorsOnBoard();
 };
 
 // Function declarations for general functions and networking

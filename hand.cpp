@@ -29,3 +29,13 @@ void Hand::addCard(Card card)
     cards.push_back(card);
     qnt++;
 }
+
+void Hand::removeCard(Card card)
+{
+    auto it = std::find(cards.begin(), cards.end(), card);
+    if (it != cards.end())
+    {
+        cards.erase(it);
+        qnt--;
+    }
+}

@@ -203,6 +203,7 @@ void printMoves(std::vector<std::string> moves)
     refresh();
 }
 // Function implementations for each card type
+
 int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card heartsCard)
 {
     std::vector<std::string> moves = {"|Select other card|", "|'M'-move the warrior(s) to Board|",
@@ -235,7 +236,10 @@ int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card hear
             for (auto card : combo)
             {
                 board.addWarrior(card.number, player_time);
+                p1.hand.removeCard(card);
             }
+
+            return 0;
         }
         else
         {
@@ -269,40 +273,263 @@ int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card hear
     }
 }
 
-void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2)
+void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2, Card diamondCard)
 {
-    // Handle gold cards (diamonds)
-    // 1. Add to diamond bank
-    // 2. Check if can buy cards
-    showMessage("Playing a Diamond card (Gold)");
-    // Implementation needed
+    std::vector<std::string> moves = {"|Select other diamond|", "|'B'-Buy cards|",
+                                      "|'D'-drop the card(s)|", "|'P'-pass|",
+                                      "Combo Cards:"};
+
+    std::vector<Card> combo;
+    combo.push_back(diamondCard);
+    int totalGold = diamondCard.number;
+
+    while (true)
+    {
+        // Update available moves display
+        moves.clear();
+        moves = {"|Select other diamond|",
+                 "|'B'-Buy cards (" + std::to_string(totalGold / 5) + " available)|",
+                 "|'D'-drop the card(s)|",
+                 "|'P'-pass|",
+                 "Combo Cards:"};
+
+        for (auto card : combo)
+        {
+            char buffer[15];
+            snprintf(buffer, sizeof(buffer), "%i - %s", card.number, card_suits[card.nipe].c_str());
+            moves.push_back(buffer);
+        }
+        printMoves(moves);
+
+        char move = getch();
+        if (move == 'D' || move == 'd')
+        {
+            return;
+        }
+        else if (move == 'P' || move == 'p')
+        {
+            return;
+        }
+        else if (move == 'B' || move == 'b')
+        {
+            int cardsCanBuy = totalGold / 5;
+            if (cardsCanBuy > 0)
+            {
+                // Draw cards based on gold value
+                p1.drawnFromDeck(cardsCanBuy);
+                return;
+            }
+            else
+            {
+                showMessage("Not enough gold to buy cards!");
+            }
+        }
+        else
+        {
+            int int_move = move - '0';
+            if (int_move >= 0 && int_move < p1.hand.num())
+            {
+                Card selectedCard = p1.hand.getCard(int_move);
+                if (selectedCard.nipe == DIAMONDS)
+                {
+                    auto it = std::find(combo.begin(), combo.end(), selectedCard);
+                    if (it == combo.end())
+                    {
+                        combo.push_back(selectedCard);
+                        totalGold += selectedCard.number;
+                    }
+                    else
+                    {
+                        showMessage("This card already was chosen");
+                    }
+                }
+                else
+                {
+                    showMessage("Card is not a Diamond");
+                }
+            }
+            else
+            {
+                showMessage("Invalid Move");
+            }
+        }
+    }
 }
 
-void clubsCard(bool player_time, Board &board, Player &p1, Player &p2)
+void clubsCard(bool player_time, Board &board, Player &p1, Player &p2, Card clubCard)
 {
-    // Handle shield cards (clubs)
-    // 1. Add shield to warrior
-    // 2. Protect warrior from attacks
-    showMessage("Playing a Club card (Shield)");
-    // Implementation needed
+    std::vector<std::string> moves = {"|Select warrior to shield|",
+                                      "|'D'-drop the card|",
+                                      "|'P'-pass|"};
+
+    while (true)
+    {
+        printMoves(moves);
+        char move = getch();
+
+        if (move == 'D' || move == 'd')
+        {
+            return;
+        }
+        else if (move == 'P' || move == 'p')
+        {
+            return;
+        }
+        else
+        {
+            int warrior_pos = move - '0';
+            // Add shield to selected warrior
+            int result = board.addShield(warrior_pos, clubCard.number, player_time);
+
+            switch (result)
+            {
+            case 0: // Success
+                return;
+            case 1: // Invalid position
+                showMessage("Invalid warrior position!");
+                break;
+            case 2: // Already has shield
+                showMessage("Warrior already has a shield!");
+                break;
+            default:
+                showMessage("Invalid move!");
+                break;
+            }
+        }
+    }
 }
 
-void spadesCard(bool player_time, Board &board, Player &p1, Player &p2)
+void spadesCard(bool player_time, Board &board, Player &p1, Player &p2, Card spadeCard)
 {
-    // Handle attack cards (spades)
-    // 1. Select target
-    // 2. Calculate damage
-    // 3. Apply effects
-    showMessage("Playing a Spade card (Attack)");
-    // Implementation needed
+    std::vector<std::string> moves = {"|Select target to attack|",
+                                      "|Select additional spades|",
+                                      "|'A'-Attack|",
+                                      "|'D'-drop the card(s)|",
+                                      "|'P'-pass|",
+                                      "Attack Cards:"};
+
+    std::vector<Card> combo;
+    combo.push_back(spadeCard);
+    int totalDamage = spadeCard.number;
+    int target = -1;
+
+    while (true)
+    {
+        // Update moves with current attack power
+        moves.clear();
+        moves = {"|Select target to attack|",
+                 "|Select additional spades|",
+                 "|'A'-Attack (Power: " + std::to_string(totalDamage) + ")|",
+                 "|'D'-drop the card(s)|",
+                 "|'P'-pass|",
+                 "Attack Cards:"};
+
+        for (auto card : combo)
+        {
+            char buffer[15];
+            snprintf(buffer, sizeof(buffer), "%i - %s", card.number, card_suits[card.nipe].c_str());
+            moves.push_back(buffer);
+        }
+        printMoves(moves);
+
+        char move = getch();
+        if (move == 'D' || move == 'd')
+        {
+            return;
+        }
+        else if (move == 'P' || move == 'p')
+        {
+            return;
+        }
+        else if (move == 'A' || move == 'a')
+        {
+            if (target >= 0)
+            {
+                int result = board.atackWarrior(target, totalDamage, player_time);
+                switch (result)
+                {
+                case 1: // Shield broken
+                    showMessage("Shield broken!");
+                    return;
+                case 2: // Warrior killed
+                    showMessage("Warrior killed!");
+                    p1.drawnFromDeck(1); // Bonus card for kill
+                    return;
+                case -1:
+                    showMessage("Invalid target!");
+                    break;
+                case -2:
+                    showMessage("Not enough damage to break shield!");
+                    break;
+                case -3:
+                    showMessage("Not enough damage to kill warrior!");
+                    break;
+                }
+            }
+            else
+            {
+                showMessage("Select a target first!");
+            }
+        }
+        else
+        {
+            int int_move = move - '0';
+            if (target < 0)
+            {
+                target = int_move;
+            }
+            else if (int_move >= 0 && int_move < p1.hand.num())
+            {
+                Card selectedCard = p1.hand.getCard(int_move);
+                if (selectedCard.nipe == SPADES)
+                {
+                    auto it = std::find(combo.begin(), combo.end(), selectedCard);
+                    if (it == combo.end())
+                    {
+                        combo.push_back(selectedCard);
+                        totalDamage += selectedCard.number;
+                    }
+                    else
+                    {
+                        showMessage("This card already was chosen");
+                    }
+                }
+                else
+                {
+                    showMessage("Card is not a Spade");
+                }
+            }
+            else
+            {
+                showMessage("Invalid Move");
+            }
+        }
+    }
 }
 
-void jokerCard(bool player_time, Board &board, Player &p1, Player &p2)
+void jokerCard(bool player_time, Board &board, Player &p1, Player &p2, Card jokerCard)
 {
-    // Handle joker cards
-    // 1. Steal random card from opponent
-    showMessage("Playing a Joker card");
-    // Implementation needed
+    // Joker steals a random card from opponent
+    if (p2.hand.num() > 0)
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> distrib(0, p2.hand.num() - 1);
+        int stolen_card_pos = distrib(gen);
+
+        Card stolenCard = p2.hand.getCard(stolen_card_pos);
+        p1.hand.addCard(stolenCard);
+
+        char buffer[50];
+        snprintf(buffer, sizeof(buffer), "Stole a %s of %s!",
+                 card_values[stolenCard.number - 1].c_str(),
+                 card_suits[stolenCard.nipe].c_str());
+        showMessage(buffer);
+    }
+    else
+    {
+        showMessage("Opponent has no cards to steal!");
+    }
 }
 
 bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
@@ -314,6 +541,7 @@ bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
     {
         while (true)
         {
+            board.draw(p1, p2);
             printMoves(moves);
             int move = getint();
             if (!(move >= 0 && move < p1.hand.num()))
@@ -326,16 +554,16 @@ bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
                     heartsCard(player_time, board, p1, p2, p1.hand.getCard(move));
                     break;
                 case DIAMONDS: // Diamonds
-                    diamondsCard(player_time, board, p1, p2);
+                    diamondsCard(player_time, board, p1, p2, p1.hand.getCard(move));
                     break;
                 case CLUBS: // Clubs
-                    clubsCard(player_time, board, p1, p2);
+                    clubsCard(player_time, board, p1, p2, p1.hand.getCard(move));
                     break;
                 case SPADES: // Spades
-                    spadesCard(player_time, board, p1, p2);
+                    spadesCard(player_time, board, p1, p2, p1.hand.getCard(move));
                     break;
                 case JOKER: // Joker
-                    jokerCard(player_time, board, p1, p2);
+                    jokerCard(player_time, board, p1, p2, p1.hand.getCard(move));
                     break;
                 default:
                     printw("move: %i", move);
@@ -360,7 +588,7 @@ void loopBotGame(Board &board, Player &p1, Player &p2)
     std::uniform_int_distribution<> distrib(1, 2);
     Coord myCoord;
     myCoord.set(1, 1);
-    board.draw(p1, p2, myCoord);
+    board.draw(p1, p2);
     bool player_time;
     bool end_game = 0;
     if (distrib(gen) == 1)

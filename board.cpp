@@ -232,8 +232,9 @@ int Board::tradeWarrior(int pos_ally, int pos_enemy, int player)
 }
 
 // Draw the entire game board including all cards and decks
-void Board::draw(Player &p1, Player &p2, Coord &coord)
+void Board::draw(Player &p1, Player &p2)
 {
+    Coord coord;
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
 
@@ -250,6 +251,7 @@ void Board::draw(Player &p1, Player &p2, Coord &coord)
     p2.deck.draw(coord);
     printDiamondBanks(p1, coord);
     printDiamondBanks(p2, coord);
+    printWarriorsOnBoard();
     refresh();
 }
 
@@ -322,5 +324,56 @@ void Board::printPlayerCards(Player &p1, Coord &coord)
         coord.up(CARD_HEIGHT);
         coord.left(HALF_CARD_WIDTH);
         printHalfCard(coord, p1.hand.getCard(i), i);
+    }
+}
+
+// Add this function at the end of the file
+void Board::printWarriorsOnBoard()
+{
+    int max_y, max_x;
+    getmaxyx(stdscr, max_y, max_x);
+
+    // Print enemy warriors (p2) in the upper half if any
+    if (!p2Warriors.empty())
+    {
+        Coord coord;
+        int groupSize = p2Warriors.size();
+        int totalWidth = CARD_WIDTH + (groupSize - 1) * HALF_CARD_WIDTH;
+        int start_x = (max_x - totalWidth) / 2;
+        int start_y = max_y / 4; // top quarter
+        coord.set(start_y, start_x);
+
+        for (int i = 0; i < groupSize; i++)
+        {
+            if (i == 0)
+                printFullCard(coord, p2Warriors[i], i);
+            else
+            {
+                coord.right(HALF_CARD_WIDTH);
+                printHalfCard(coord, p2Warriors[i], i);
+            }
+        }
+    }
+
+    // Print ally warriors (p1) in the lower half if any
+    if (!p1Warriors.empty())
+    {
+        Coord coord;
+        int groupSize = p1Warriors.size();
+        int totalWidth = CARD_WIDTH + (groupSize - 1) * HALF_CARD_WIDTH;
+        int start_x = (max_x - totalWidth) / 2;
+        int start_y = 3 * max_y / 4; // bottom quarter
+        coord.set(start_y, start_x);
+
+        for (int i = 0; i < groupSize; i++)
+        {
+            if (i == 0)
+                printFullCard(coord, p1Warriors[i], i);
+            else
+            {
+                coord.right(HALF_CARD_WIDTH);
+                printHalfCard(coord, p1Warriors[i], i);
+            }
+        }
     }
 }
