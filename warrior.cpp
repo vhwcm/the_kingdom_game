@@ -59,13 +59,15 @@ void Warrior::draw(Coord &coord, int num) const
 {
     if (shield.number == 0)
     {
-        printFullCard(coord, warrior, num);
+        printFullFullCard(coord, warrior, num);
+        coord.right(CARD_WIDTH);
     }
     else
     {
         printFullHalfCard(coord, warrior, num);
         coord.up(FULL_CARD_HEIGTH);
+        coord.right(HALF_CARD_WIDTH);
+        printFullFullCard(coord, shield, num);
         coord.right(CARD_WIDTH);
-        printFullFullCard(coord, warrior, num);
     }
 }

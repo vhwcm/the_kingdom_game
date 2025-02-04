@@ -40,7 +40,7 @@ int Board::addShield(int pos, Card shieldCard, int player)
             return 1;                                 // Warrior doesn't exist
         return p1Warriors[pos].addShield(shieldCard); // return 2 if arleady have a shield
     }
-    else if (player == 2)
+    else if (player == 0)
     {
         if (pos < 0 || pos >= (int)p2Warriors.size())
             return 1;
@@ -252,6 +252,7 @@ int Board::countFullDiamondBanks(int player)
 // Draw the entire game board including all cards and decks
 void Board::draw(Player &p1, Player &p2)
 {
+    werase(stdscr);
     Coord coord;
     int max_y, max_x;
     getmaxyx(stdscr, max_y, max_x);
@@ -356,6 +357,7 @@ void Board::printWarriorsOnBoard()
     int p1_total_size = 0;
     int p2_total_size = 0;
 
+    // Calculate total width required for Player 1's warriors
     for (auto warrior : p1Warriors)
     {
         if (warrior.stats().second == 0)
@@ -368,6 +370,7 @@ void Board::printWarriorsOnBoard()
         }
     }
 
+    // Calculate total width required for Player 2's warriors
     for (auto warrior : p2Warriors)
     {
         if (warrior.stats().second == 0)
@@ -380,8 +383,9 @@ void Board::printWarriorsOnBoard()
         }
     }
 
+    // Set initial position for Player 1's warriors
     coord.set(middle_y, middle_x - (p1_total_size / 2));
-    coord.down(FULL_CARD_HEIGTH + 1);
+    coord.down(1);
     for (const Warrior warrior : p1Warriors)
     {
         int index = 0;
@@ -390,8 +394,9 @@ void Board::printWarriorsOnBoard()
         coord.right(2);
     }
 
+    // Set initial position for Player 2's warriors
     coord.set(middle_y, middle_x - (p2_total_size / 2));
-    coord.up(FULL_CARD_HEIGTH + 1);
+    coord.up(1);
     for (const Warrior warrior : p2Warriors)
     {
         int index = 0;

@@ -42,7 +42,7 @@ void printEnemyFullCardBack(Coord &coord, int num)
         "#             #",
         "#             #",
         "#             #",
-        "#%2i############"};
+        "#%-2i############"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
@@ -63,7 +63,7 @@ void printEnemyHalfCardBack(Coord &coord, int num)
         "#        ",
         "#        ",
         "#        ",
-        "#%2i######"};
+        "#%-2i######"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
@@ -78,19 +78,19 @@ void printEnemyHalfCardBack(Coord &coord, int num)
 void printHalfCard(Coord &coord, Card card, int num)
 {
     const char *lines[] = {
-        "#%2i#####",
-        "#        ",
-        "#%2i     ",
+        "#%-2i#####",
         "#        ",
         "#        ",
         "#        ",
-        "#%8s"};
+        "#        ",
+        "#%-2i      ",
+        "#%-8s"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
         if (i == 0)
             printw(lines[i], num);
-        else if (i == 2)
+        else if (i == CARD_HEIGHT - 2)
             printw(lines[i], card.number);
         else if (i == CARD_HEIGHT - 1)
             printw(lines[i], card_suits[card.nipe].c_str());
@@ -103,19 +103,19 @@ void printHalfCard(Coord &coord, Card card, int num)
 void printFullCard(Coord &coord, Card card, int num)
 {
     const char *lines[] = {
-        "#%2i############",
-        "#             #",
-        "# %2i          #",
+        "#%-2i############",
         "#             #",
         "#             #",
         "#             #",
-        "#%8s     #"};
+        "#             #",
+        "#%-2i           #",
+        "#%-8s     #"};
 
     for (int i = 0; i < CARD_HEIGHT; i++)
     {
         if (i == 0)
             printw(lines[i], num);
-        else if (i == 2)
+        else if (i == CARD_HEIGHT - 2)
             printw(lines[i], card.number);
         else if (i == CARD_HEIGHT - 1)
             printw(lines[i], card_suits[card.nipe].c_str());
@@ -128,25 +128,25 @@ void printFullCard(Coord &coord, Card card, int num)
 void printFullHalfCard(Coord &coord, Card card, int num)
 {
     const char *lines[] = {
-        "#%2i#####",   // Line 0: shows the card number indicator (num)
+        "#%-2i#####",  // Line 0: shows the card number indicator (num)
         "#        ",   // Line 1
         "#        ",   // Line 2: shows the card's face value (card.number)
         "#        ",   // Line 3
         "#        ",   // Line 4 (extra line)
         "#        ",   // Line 5 (extra line)
         "#        ",   // Line 6 (extra line)
-        "#        ",   // Line 7 (extra line)
         "#%-2i      ", // Line 8 (extra line)
-        "#%8s"         // Line 9: shows the card suit
+        "#%-8s",       // Line 9: shows the card suit
+        "#########"    // Line 7 (extra line)
     };
 
     for (int i = 0; i < FULL_CARD_HEIGTH; i++)
     {
         if (i == 0)
             printw(lines[i], num);
-        else if (i == FULL_CARD_HEIGTH - 2)
+        else if (i == FULL_CARD_HEIGTH - 3)
             printw(lines[i], card.number);
-        else if (i == FULL_CARD_HEIGTH - 1)
+        else if (i == FULL_CARD_HEIGTH - 2)
             printw(lines[i], card_suits[card.nipe].c_str());
         else
             printw("%s", lines[i]);
@@ -154,7 +154,7 @@ void printFullHalfCard(Coord &coord, Card card, int num)
     }
 }
 
-void printFullFullCardWidth(Coord &coord, Card card, int num)
+void printFullFullCard(Coord &coord, Card card, int num)
 {
     const char *lines[] = {
         "#%2i############",  // Line 0: prints "num" in a field of 2, then border characters to fill width 15
@@ -164,9 +164,9 @@ void printFullFullCardWidth(Coord &coord, Card card, int num)
         "#             #",   // Line 4
         "#             #",   // Line 5
         "#             #",   // Line 6
-        "#             #",   // Line 7
         "#%-2i           #", // Line 8
-        "#%13s#"             // Line 9: prints the card suit right-aligned in a field of 13 between borders
+        "#%-13s#",           // Line 9: prints the card suit right-aligned in a field of 13 between borders
+        "###############"    // Line 7
     };
 
     // Use FULL_CARD_HEIGTH (10) and CARD_WIDTH (15)
@@ -174,9 +174,9 @@ void printFullFullCardWidth(Coord &coord, Card card, int num)
     {
         if (i == 0)
             printw(lines[i], num);
-        else if (i == FULL_CARD_HEIGTH - 2)
+        else if (i == FULL_CARD_HEIGTH - 3)
             printw(lines[i], card.number);
-        else if (i == FULL_CARD_HEIGTH - 1)
+        else if (i == FULL_CARD_HEIGTH - 2)
             printw(lines[i], card_suits[card.nipe].c_str());
         else
             printw("%s", lines[i]);
@@ -208,6 +208,12 @@ void printTitle(Coord &myCoord)
         printw("   ##     ##  ##   ##   #            ## ##      ##    ##  ###  ##   ##   ## ##   ### ###  ##   ##           ##   ##  ##   ##  ##   ##   ##   #  ");
         myCoord.down();
         printw(" ####    ##  ##  #######           ### ###   ######  ##   ##   #####   #####     #####   ### ###            #####   ##   ##  ### ###  ####### ");
+        myCoord.down();
+        myCoord.down();
+    }
+    else
+    {
+        printw("The kingdom game");
         myCoord.down();
         myCoord.down();
     }
@@ -435,20 +441,14 @@ void clubsCard(bool player_time, Board &board, Player &p1, Player &p2, Card club
         showMessage("Carta inválida para Clubs!");
         return;
     }
-    std::vector<std::string> moves = {"|Select warrior to shield|",
-                                      "|'D'-drop the card|",
+    std::vector<std::string> moves = {"|Select warrior to shield|", "Select diamond nank",
                                       "|'P'-pass|"};
 
     while (true)
     {
         printMoves(moves);
         char move = getch();
-
-        if (move == 'D' || move == 'd')
-        {
-            return;
-        }
-        else if (move == 'P' || move == 'p')
+        if (move == 'P' || move == 'p')
         {
             return;
         }
@@ -456,11 +456,12 @@ void clubsCard(bool player_time, Board &board, Player &p1, Player &p2, Card club
         {
             int warrior_pos = move - '0';
             // Add shield to selected warrior
-            int result = board.addShield(warrior_pos, clubCard.number, player_time);
+            int result = board.addShield(warrior_pos, clubCard, player_time);
 
             switch (result)
             {
             case 0: // Success
+                p1.hand.removeCard(clubCard);
                 return;
             case 1: // Invalid position
                 showMessage("Invalid warrior position!");
@@ -621,7 +622,7 @@ void jokerCard(bool player_time, Board &board, Player &p1, Player &p2, Card joke
     }
 }
 
-bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
+bool playerTime(int player_time, Board &board, Player &p1, Player &p2)
 {
     const std::vector<std::string> moves = {"Select a Card or:", "'P'-Pass",
                                             "'Q'-quit"
@@ -632,32 +633,40 @@ bool playerTime(bool player_time, Board &board, Player &p1, Player &p2)
         {
             board.draw(p1, p2);
             printMoves(moves);
-            int move = getint();
-            if (!(move >= 0 && move < p1.hand.num()))
-                showMessage("Select a valid Card of your Hand");
+            int move = getch();
+            if (move == 'Q' || move == 'q')
+            {
+                quit();
+            }
             else
             {
-                switch (p1.hand.getCard(move).nipe)
+                int int_move = move - '0';
+                if (!(int_move >= 0 && int_move < p1.hand.num()))
+                    showMessage("Select a valid Card of your Hand");
+                else
                 {
-                case HEARTS: // Hearts
-                    heartsCard(player_time, board, p1, p2, p1.hand.getCard(move));
-                    break;
-                case DIAMONDS: // Diamonds
-                    diamondsCard(player_time, board, p1, p2, p1.hand.getCard(move));
-                    break;
-                case CLUBS: // Clubs
-                    clubsCard(player_time, board, p1, p2, p1.hand.getCard(move));
-                    break;
-                case SPADES: // Spades
-                    spadesCard(player_time, board, p1, p2, p1.hand.getCard(move));
-                    break;
-                case JOKER: // Joker
-                    jokerCard(player_time, board, p1, p2, p1.hand.getCard(move));
-                    break;
-                default:
-                    printw("move: %i", move);
-                    showMessage("Invalid card type!");
-                    break;
+                    switch (p1.hand.getCard(int_move).nipe)
+                    {
+                    case HEARTS: // Hearts
+                        heartsCard(player_time, board, p1, p2, p1.hand.getCard(int_move));
+                        break;
+                    case DIAMONDS: // Diamonds
+                        diamondsCard(player_time, board, p1, p2, p1.hand.getCard(int_move));
+                        break;
+                    case CLUBS: // Clubs
+                        clubsCard(player_time, board, p1, p2, p1.hand.getCard(int_move));
+                        break;
+                    case SPADES: // Spades
+                        spadesCard(player_time, board, p1, p2, p1.hand.getCard(int_move));
+                        break;
+                    case JOKER: // Joker
+                        jokerCard(player_time, board, p1, p2, p1.hand.getCard(int_move));
+                        break;
+                    default:
+                        printw("move: %i", move);
+                        showMessage("Invalid card type!");
+                        break;
+                    }
                 }
             }
         }
@@ -678,7 +687,7 @@ void loopBotGame(Board &board, Player &p1, Player &p2)
     Coord myCoord;
     myCoord.set(1, 1);
     board.draw(p1, p2);
-    bool player_time;
+    int player_time;
     bool end_game = 0;
     if (distrib(gen) == 1)
     {
@@ -690,10 +699,11 @@ void loopBotGame(Board &board, Player &p1, Player &p2)
         showMessage("Player 2 Starts!!!");
         player_time = 1;
     }
+    player_time = 1;
     while (!end_game)
     {
         end_game = playerTime(player_time, board, p1, p2);
-        player_time = !player_time;
+        // player_time = !player_time;
     }
 }
 
