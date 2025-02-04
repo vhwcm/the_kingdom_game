@@ -95,7 +95,7 @@ void printHalfCard(Coord &coord, Card card, int num)
         else if (i == CARD_HEIGHT - 1)
             printw(lines[i], card_suits[card.nipe].c_str());
         else
-            printw(lines[i]);
+            printw("%s", lines[i]);
         coord.down();
     }
 }
@@ -120,7 +120,66 @@ void printFullCard(Coord &coord, Card card, int num)
         else if (i == CARD_HEIGHT - 1)
             printw(lines[i], card_suits[card.nipe].c_str());
         else
-            printw(lines[i]);
+            printw("%s", lines[i]);
+        coord.down();
+    }
+}
+
+void printFullHalfCard(Coord &coord, Card card, int num)
+{
+    const char *lines[] = {
+        "#%2i#####",   // Line 0: shows the card number indicator (num)
+        "#        ",   // Line 1
+        "#        ",   // Line 2: shows the card's face value (card.number)
+        "#        ",   // Line 3
+        "#        ",   // Line 4 (extra line)
+        "#        ",   // Line 5 (extra line)
+        "#        ",   // Line 6 (extra line)
+        "#        ",   // Line 7 (extra line)
+        "#%-2i      ", // Line 8 (extra line)
+        "#%8s"         // Line 9: shows the card suit
+    };
+
+    for (int i = 0; i < FULL_CARD_HEIGTH; i++)
+    {
+        if (i == 0)
+            printw(lines[i], num);
+        else if (i == FULL_CARD_HEIGTH - 2)
+            printw(lines[i], card.number);
+        else if (i == FULL_CARD_HEIGTH - 1)
+            printw(lines[i], card_suits[card.nipe].c_str());
+        else
+            printw("%s", lines[i]);
+        coord.down();
+    }
+}
+
+void printFullFullCardWidth(Coord &coord, Card card, int num)
+{
+    const char *lines[] = {
+        "#%2i############",  // Line 0: prints "num" in a field of 2, then border characters to fill width 15
+        "#             #",   // Line 1: blank line with left and right borders
+        "#             #",   // Line 2: prints card.number (face value) inside borders
+        "#             #",   // Line 3
+        "#             #",   // Line 4
+        "#             #",   // Line 5
+        "#             #",   // Line 6
+        "#             #",   // Line 7
+        "#%-2i           #", // Line 8
+        "#%13s#"             // Line 9: prints the card suit right-aligned in a field of 13 between borders
+    };
+
+    // Use FULL_CARD_HEIGTH (10) and CARD_WIDTH (15)
+    for (int i = 0; i < FULL_CARD_HEIGTH; i++)
+    {
+        if (i == 0)
+            printw(lines[i], num);
+        else if (i == FULL_CARD_HEIGTH - 2)
+            printw(lines[i], card.number);
+        else if (i == FULL_CARD_HEIGTH - 1)
+            printw(lines[i], card_suits[card.nipe].c_str());
+        else
+            printw("%s", lines[i]);
         coord.down();
     }
 }
@@ -206,6 +265,12 @@ void printMoves(std::vector<std::string> moves)
 
 int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card heartsCard)
 {
+    // Adicionada validação do nipe
+    if (heartsCard.nipe != HEARTS)
+    {
+        showMessage("Carta inválida para Hearts!");
+        return -1;
+    }
     std::vector<std::string> moves = {"|Select other card|", "|'M'-move the warrior(s) to Board|",
                                       "|'D'-drop the card(s)|",
                                       "|'P'-pass", "Combo Cards:"};
@@ -235,7 +300,7 @@ int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card hear
         {
             for (auto card : combo)
             {
-                board.addWarrior(card.number, player_time);
+                board.addWarrior(card, player_time);
                 p1.hand.removeCard(card);
             }
 
@@ -275,6 +340,12 @@ int heartsCard(bool player_time, Board &board, Player &p1, Player &p2, Card hear
 
 void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2, Card diamondCard)
 {
+    // Adicionada validação do nipe
+    if (diamondCard.nipe != DIAMONDS)
+    {
+        showMessage("Carta inválida para Diamonds!");
+        return;
+    }
     std::vector<std::string> moves = {"|Select other diamond|", "|'B'-Buy cards|",
                                       "|'D'-drop the card(s)|", "|'P'-pass|",
                                       "Combo Cards:"};
@@ -358,6 +429,12 @@ void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2, Card d
 
 void clubsCard(bool player_time, Board &board, Player &p1, Player &p2, Card clubCard)
 {
+    // Adicionada validação do nipe
+    if (clubCard.nipe != CLUBS)
+    {
+        showMessage("Carta inválida para Clubs!");
+        return;
+    }
     std::vector<std::string> moves = {"|Select warrior to shield|",
                                       "|'D'-drop the card|",
                                       "|'P'-pass|"};
@@ -401,6 +478,12 @@ void clubsCard(bool player_time, Board &board, Player &p1, Player &p2, Card club
 
 void spadesCard(bool player_time, Board &board, Player &p1, Player &p2, Card spadeCard)
 {
+    // Adicionada validação do nipe
+    if (spadeCard.nipe != SPADES)
+    {
+        showMessage("Carta inválida para Spades!");
+        return;
+    }
     std::vector<std::string> moves = {"|Select target to attack|",
                                       "|Select additional spades|",
                                       "|'A'-Attack|",
@@ -509,6 +592,12 @@ void spadesCard(bool player_time, Board &board, Player &p1, Player &p2, Card spa
 
 void jokerCard(bool player_time, Board &board, Player &p1, Player &p2, Card jokerCard)
 {
+    // Adicionada validação do nipe
+    if (jokerCard.nipe != JOKER)
+    {
+        showMessage("Carta inválida para Joker!");
+        return;
+    }
     // Joker steals a random card from opponent
     if (p2.hand.num() > 0)
     {

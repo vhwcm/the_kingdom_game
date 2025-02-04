@@ -94,20 +94,39 @@ int DiamondBank::attacked(std::vector<Card> atack, int pos)
 void DiamondBank::addDiamondCard(std::vector<Card> cards)
 {
     for (auto card : cards)
-        diamonds_cards.push_back(card);
+    {
+        if (card.nipe == DIAMONDS)
+        {
+            diamonds_cards.push_back(card);
+        }
+        else
+        {
+            showMessage("Error: Card is not a diamond.");
+        }
+    }
 }
+
 void DiamondBank::addShieldCard(std::vector<Card> cards)
 {
     for (auto card : cards)
-        shield_cards.push_back(card);
+    {
+        if (card.nipe == CLUBS)
+        {
+            shield_cards.push_back(card);
+        }
+        else
+        {
+            showMessage("Error: Card is not a shield.");
+        }
+    }
 }
 
-int DiamondBank::numCards()
+int DiamondBank::numCards() const
 {
     return (int)(diamonds_cards.size() + shield_cards.size());
 }
 
-bool DiamondBank::full()
+bool DiamondBank::full() const
 {
     int acmul = 0;
     for (auto card : diamonds_cards)

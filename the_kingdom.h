@@ -90,8 +90,8 @@ public:
     int attacked(std::vector<Card>, int pos); // Handle attack on the diamond bank
     void addDiamondCard(std::vector<Card>);   // Add cards to the diamond bank
     void addShieldCard(std::vector<Card>);
-    int numCards();
-    bool full();
+    int numCards() const;
+    bool full() const;
 };
 
 // Hand class representing a player's hand of cards
@@ -124,30 +124,46 @@ public:
     int getId();
 };
 
+class Warrior
+{
+private:
+    Card warrior;
+    Card shield;
+
+public:
+    Warrior(Card);
+    int addShield(Card);
+    int atack(int attack);
+    std::pair<int, int> stats() const;
+    void draw(Coord &coord, int num) const;
+};
 // Board class representing the game board
 class Board
 {
-private:
+public:
     int p1Life;                              // Player 1's life
     int p2Life;                              // Player 2's life
-    std::vector<Card> p1Warriors;            // Player 1's warriors
-    std::vector<Card> p2Warriors;            // Player 2's warriors
+    std::vector<Warrior> p1Warriors;         // Player 1's warriors
+    std::vector<Warrior> p2Warriors;         // Player 2's warriors
     std::vector<DiamondBank> p1DiamondBanks; // Player 1's diamond banks
     std::vector<DiamondBank> p2DiamondBanks; // Player 2's diamond banks
 
-public:
     Board();                                                   // Constructor to initialize the board
-    int addWarrior(int life, int player);                      // Add a warrior to the board
-    int addShield(int pos, int shield, int player);            // Add a shield to a warrior
-    int breakShield(int pos, int player);                      // Break a shield of a warrior
-    int atackWarrior(int pos, int atack, int player);          // Attack a warrior
+    int addWarrior(Card card, int player);                     // Add a warrior to the board
+    int addShield(int pos, Card shieldCard, int player);       // Add a shield to a warrior
+    int atackWarrior(int pos, int attack, int player);         // Attack a warrior
     int executeWarrior(int pos, int player);                   // Execute a warrior
     int tradeWarrior(int pos_ally, int pos_enemy, int player); // Trade warriors between players
     void draw(Player &p1, Player &p2);                         // Draw the board on the screen
     void printEnemyCards(Player &p2, Coord &coord);            // Print enemy's cards
     void printPlayerCards(Player &p1, Coord &coord);           // Print player's cards
-    void printDiamondBanks(Player &p, Coord &coord);           // Print the gold bank
+    void printDiamondBanks(Player &p);                         // Print the gold bank
     void printWarriorsOnBoard();
+    int attackDiamondBank(int bankIndex, std::vector<Card> attackCards, int player);
+    int createDiamondBank(Card diamondCard, int player);             // Create new bank with initial diamond card
+    int addDiamondToBank(int bankPos, Card diamondCard, int player); // Add diamond to existing bank
+    int addShieldToBank(int bankPos, Card shieldCard, int player);   // Add shield to existing bank
+    int countFullDiamondBanks(int player);                           // Returns number of full diamond banks for a player
 };
 
 // Function declarations for general functions and networking
@@ -170,7 +186,9 @@ void printEnemyFullCardBack(Coord &coord, int num);      // Print the back of an
 void printEnemyHalfCardBack(Coord &coord, int num);      // Print the back of an enemy's half card
 void printHalfCard(Coord &coord, Card card, int num);    // Print the front of a half card
 void printFullCard(Coord &coord, Card card, int num);    // Print the front of a full card
-void quit();                                             // Quit the game
+void printFullHalfCard(Coord &coord, Card card, int num);
+void printFullFullCard(Coord &coord, Card card, int num);
+void quit(); // Quit the game
 
 void heartsCard(bool player_time, Board &board, Player &p1, Player &p2);   // Handle hearts cards (warriors)
 void diamondsCard(bool player_time, Board &board, Player &p1, Player &p2); // Handle diamonds cards (gold)
